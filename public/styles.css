@@ -1,0 +1,9 @@
+body {
+	font-family: sans-serif;
+	color: green;
+}
+
+div.content {
+	margin: auto;
+	max-width: 800px;
+}
