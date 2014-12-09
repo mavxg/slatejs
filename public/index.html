@@ -14,6 +14,18 @@
 	<p>We can now change this file and get a resync</p>
 	<p>Add some more text</p>
 </div>
+<div id="preview" class="content">
+</div>
 <script type="text/javascript" src="slate.js"></script>
+<script type="text/javascript">
+var preview = document.getElementById('preview');
+var m = Slate.model;
+var doc = new m.Document(1,[new m.Section(2,[new m.P(4,["This is some text."])]), new m.Section(3,[])]);
+
+var table = new m.Table(1, [new m.THead(2,[new m.Row(5,[new m.Cell(6,[])])]), new m.TBody(3,[]), new m.TFoot(4,[])]);
+
+var tf = new Slate.editor.Table(table);
+Slate.editor.friar.renderComponent(tf, preview);
+</script>
 </body>
 </html>

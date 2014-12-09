@@ -1,3 +1,1 @@
-//Browserify entry point
-var slate = require('./');
-//alert(slate.editor.description);
+window.Slate = require('./');
