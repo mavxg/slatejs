@@ -7,25 +7,44 @@
 	<link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<div class="content">
-	<h1>TODO: Put Document Editor instance here.</h1>
-	<p>We could do with some basic styling also.</p>
-	<p>And some way to make it reload on a change of this file would be good.</p>
-	<p>We can now change this file and get a resync</p>
-	<p>Add some more text</p>
-</div>
 <div id="preview" class="content">
 </div>
 <script type="text/javascript" src="slate.js"></script>
 <script type="text/javascript">
 var preview = document.getElementById('preview');
 var m = Slate.model;
-var doc = new m.Document(1,[new m.Section(2,[new m.P(4,["This is some text."])]), new m.Section(3,[])]);
+var e = Slate.editor;
 
-var table = new m.Table(1, [new m.THead(2,[new m.Row(5,[new m.Cell(6,[])])]), new m.TBody(3,[]), new m.TFoot(4,[])]);
 
-var tf = new Slate.editor.Table(table);
-Slate.editor.friar.renderComponent(tf, preview);
+var table = new m.Table(1, [
+	m.attrib('alignments',['left','right']),
+	new m.THead(2,[
+		new m.Row(5,[new m.Cell(6,["Some text to go in the cell."]), new m.Cell(15,["Header2"])])]), 
+	new m.TBody(3,[
+		new m.Row(7,[new m.Cell(8,[
+	"Text that is not bold before",
+	m.tag('strong',{}),
+	"Some bold text to go in the ",
+	m.tag('em',{}),"bold italic"," cell.",
+	m.endtag('strong'), " and not bold after.",
+	m.endtag('em')]),
+			new m.Cell(17,["99"])
+		])]), 
+	new m.TFoot(4,[
+		])]);
+
+var doc = new m.Document(10,[
+	new m.Section(12,[
+		new m.H1(16, ["Dummy document"]), 
+		new m.P(14,["This is some text. Lorem ipsum dolor",m.endtag('strong')," sit amet, consectetur adipisicing elit. Corrupti ",m.tag('a',{href: "http://google.co.uk"}),"vitae",m.endtag('a'),", aliquid ex necessitatibus repellat a illo fuga dolore aperiam totam tempore nisi neque delectus labore, nihil quae dignissimos dolores mollitia? Vel sunt neque voluptatibus excepturi laboriosam possimus adipisci quidem dolores, omnis nemo dolore",m.tag('strong',{})," eligendi blanditiis, voluptatem in doloribus hic aperiam."])]), 
+	new m.Section(13,[
+		table, 
+		new m.P(9,["This is a test"]),
+		new m.Quote(18,["This is a",m.tag('strong',{})," really ",m.endtag('strong'),"important quote."])])
+	]);
+
+var tf = new e.Document(doc);
+e.friar.renderComponent(tf, preview);
 </script>
 </body>
 </html>

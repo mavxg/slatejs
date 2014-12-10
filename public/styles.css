@@ -1,9 +1,24 @@
 body {
 	font-family: sans-serif;
-	color: green;
+	color: #114;
 }
 
 div.content {
 	margin: auto;
 	max-width: 800px;
+	border: 1px solid pink;
+}
+
+section {
+	border-bottom: 1px solid green;
+}
+
+table {
+	width: 100%;
+	border: 1px solid pink;
+}
+
+th, td {
+	text-align: left;
+	border: 1px solid pink;
 }
