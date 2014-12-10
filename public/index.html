@@ -40,10 +40,55 @@ var doc = new m.Document(10,[
 	new m.Section(13,[
 		table, 
 		new m.P(9,["This is a test"]),
+		new m.Ulli(20,["First list item"]),
+		new m.Ulli(21,["Second list item"]),
+		new m.Olli(22,["First list item"]),
+		new m.Olli(23,["Second list item"]),
+		new m.Code(24,["Some code here"]),
+		new m.Code(25,["Some more code here"]),
 		new m.Quote(18,["This is a",m.tag('strong',{})," really ",m.endtag('strong'),"important quote."])])
 	]);
 
-var tf = new e.Document(doc);
+
+var op = new Slate.Operations().remove("Dummy").insert("Cool").end(doc.length);
+
+doc = m.apply(doc, op);
+
+function makeHugeTable(op, rows, cols) {
+	var al = ['left'];
+	for (var c = 0; c < cols; c++)
+		op.insert('Header').insert({_type:'Cell'});
+	op.insert({_type:'Row'}).insert({_type:'THead'});
+	for (var r = 0; r < rows; r++) {
+		for (var c = 0; c < cols; c++) {
+			op.insert("Cell Content").insert({_type:'Cell'});
+		}
+		op.insert({_type:'Row'})
+	}
+	for (var c = 1; c < cols; c++)
+		al.push('right');
+
+	op.insert({_type:'TBody'});
+	op.insert({attrib:'alignments', value:al});
+	op.insert({_type:'Table'});
+}
+
+var opB = new Slate.Operations().retain(doc.children[0].length-1).insert("Some Text").insert({_type:'P'});
+
+makeHugeTable(opB, 1000, 5);
+
+opB.end(doc.length);
+
+doc = m.apply(doc, opB);
+
+var opC = opB.invert();
+doc = m.apply(doc, opC);
+
+doc = m.apply(doc, opC.invert())
+
+
+
+var tf = new e.Document({obj: doc});
 e.friar.renderComponent(tf, preview);
 </script>
 </body>

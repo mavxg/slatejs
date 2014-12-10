@@ -3,4 +3,5 @@ module.exports = {
 	store:   require('./lib/store'),
 	model:  require('./lib/model'),
 	server: require('./lib/server'),
+	Operations: require('./lib/operations'),
 };
