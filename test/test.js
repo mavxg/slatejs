@@ -41,8 +41,6 @@ describe('Compose', function() {
 		assert.equal(JSON.stringify(a),JSON.stringify(doc));
 		assert.equal(JSON.stringify(b),JSON.stringify(doc));
 	});
-
-
 });
 
 describe('Apply', function() {
@@ -159,5 +157,19 @@ describe('Undo manager', function() {
 			um.add(op);
 		});
 		assert.equal(JSON.stringify(justOther),JSON.stringify(y));
+	});
+	it('Can undo compose', function() {
+		var um = new UndoManager();
+		var otherP = other.transform(opsB);
+		var x = m.apply(doc, opsB);
+		um.add(opsB, true);
+		var both = m.apply(x, otherP);
+		um.add(otherP, true);
+		var y;
+		um.performUndo(function(err, op) {
+			y = m.apply(both, op);
+			um.add(op);
+		});
+		assert.equal(JSON.stringify(y),JSON.stringify(doc));
 	});
 })
