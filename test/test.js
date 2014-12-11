@@ -6,7 +6,43 @@ var Operations = require('../lib/operations');
 var m = require('../lib/model');
 var UndoManager = require('../lib/undo');
 
-describe('Operations', function() {
+describe('Compose', function() {
+	var doc = new m.Document(1,[new m.P(2,["This is some text."])]);
+	var opA = new Operations().retain(4).insert(" really").end(doc.length);
+	var opB = new Operations().retain(4+7).insert(" actually").end(doc.length+7);
+
+	it('Can compose inverse', function() {
+		var a = m.apply(doc, opA);
+		var inv = opA.invert();
+		var comp = opA.compose(inv);
+		var b = m.apply(a, inv);		
+		var c = m.apply(doc, comp);
+		assert.equal(JSON.stringify(c),JSON.stringify(doc));
+		assert.equal(JSON.stringify(b),JSON.stringify(doc));
+	});
+
+	it('Can compose inserts', function() {
+		var a = m.apply(doc, opA);
+		var comp = opA.compose(opB);
+		var b = m.apply(a, opB);
+		var c = m.apply(doc, comp);
+		assert.equal(JSON.stringify(c),JSON.stringify(b));
+	});
+
+	it('Compose of inverse is inverse of compose', function() {
+		var comp = opA.compose(opB);
+		var ia = opA.invert();
+		var ib = opB.invert();
+		var icomp = comp.invert();
+		var compi = ib.compose(ia);
+		var dp = m.apply(doc, comp);
+		var a = m.apply(dp, icomp);
+		var b = m.apply(dp, compi);
+		assert.equal(JSON.stringify(a),JSON.stringify(doc));
+		assert.equal(JSON.stringify(b),JSON.stringify(doc));
+	});
+
+
 });
 
 describe('Apply', function() {
