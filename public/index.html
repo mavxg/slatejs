@@ -28,7 +28,23 @@ var table = new m.Table(1, [
 	m.tag('em',{}),"bold italic"," cell.",
 	m.endtag('strong'), " and not bold after.",
 	m.endtag('em')]),
-			new m.Cell(17,["99"])
+			new m.Cell(17,[m.attrib('rowSpan',2),"99"])
+		]),
+		new m.Row(7,[new m.Cell(8,[
+	"Text that is not bold before",
+	m.tag('strong',{}),
+	"Some bold text to go in the ",
+	m.tag('em',{}),"bold italic"," cell.",
+	m.endtag('strong'), " and not bold after.",
+	m.endtag('em')])
+		]),
+		new m.Row(7,[new m.Cell(8,[m.attrib('colSpan',2),
+	"Text that is not bold before",
+	m.tag('strong',{}),
+	"Some bold text to go in the ",
+	m.tag('em',{}),"bold italic"," cell.",
+	m.endtag('strong'), " and not bold after.",
+	m.endtag('em')])
 		])]), 
 	new m.TFoot(4,[
 		])]);
@@ -36,7 +52,7 @@ var table = new m.Table(1, [
 var doc = new m.Document(10,[
 	new m.Section(12,[
 		new m.H1(16, ["Dummy document"]), 
-		new m.P(14,["This is some text. Lorem ipsum dolor",m.endtag('strong')," sit amet, consectetur adipisicing elit. Corrupti ",m.tag('a',{href: "http://google.co.uk"}),"vitae",m.endtag('a'),", aliquid ex necessitatibus repellat a illo fuga dolore aperiam totam tempore nisi neque delectus labore, nihil quae dignissimos dolores mollitia? Vel sunt neque voluptatibus excepturi laboriosam possimus adipisci quidem dolores, omnis nemo dolore",m.tag('strong',{})," eligendi blanditiis, voluptatem in doloribus hic aperiam."])]), 
+		new m.P(14,["This is some text. Lorem ipsum dolor",m.endtag('strong')," sit amet, consectetur adipisicing elit. Corrupti ",m.tag('a',{href: "http://google.co.uk"}),"vitae",m.endtag('a'),", aliquid ex necessitatibus repellat",m.tag('sup',{}),"TM",m.endtag('sup')," a illo fuga dolore aperiam totam tempore nisi neque delectus labore, nihil quae dignissimos dolores mollitia? Vel sunt neque voluptatibus excepturi laboriosam possimus adipisci quidem dolores, omnis nemo dolore",m.tag('strong',{})," eligendi blanditiis, voluptatem in doloribus hic aperiam."])]), 
 	new m.Section(13,[
 		table, 
 		new m.P(9,["This is a test"]),
@@ -51,8 +67,6 @@ var doc = new m.Document(10,[
 
 
 var op = new Slate.Operations().remove("Dummy").insert("Cool").end(doc.length);
-
-doc = m.apply(doc, op);
 
 function makeHugeTable(op, rows, cols) {
 	var al = ['left'];
@@ -75,21 +89,42 @@ function makeHugeTable(op, rows, cols) {
 
 var opB = new Slate.Operations().retain(doc.children[0].length-1).insert("Some Text").insert({_type:'P'});
 
-makeHugeTable(opB, 1000, 5);
+makeHugeTable(opB, 100, 5);
+
+//doc = m.apply(doc, op)
 
 opB.end(doc.length);
 
-doc = m.apply(doc, opB);
+//opB = opB.transform(op);
 
-var opC = opB.invert();
-doc = m.apply(doc, opC);
-
-doc = m.apply(doc, opC.invert())
+var opC = new Slate.Operations().retain(480).remove('Cell').insert("Bell");
 
 
 
-var tf = new e.Document({obj: doc});
-e.friar.renderComponent(tf, preview);
+var NonServerAdaptor = Slate.server.NonServerAdaptor;
+
+var serverAdaptor = new NonServerAdaptor();
+
+var store = new Slate.Store(serverAdaptor);
+store.document = doc;
+
+function insertHugeTable(s, c) {
+	var doc = store.document;
+	var op = new Slate.Operations().retain(doc.children[0].length-1);
+	makeHugeTable(op, s, c);
+	op.end(doc.length);
+	store.apply(op);
+}
+
+store.apply(opB);
+opC.end(store.document.length);
+store.apply(opC);
+
+var editor = e.Editor({store: store});
+
+
+//var tf = new e.Document({obj: doc});
+e.friar.renderComponent(editor, preview);
 </script>
 </body>
 </html>
