@@ -89,7 +89,7 @@ function makeHugeTable(op, rows, cols) {
 
 var opB = new Slate.Operations().retain(doc.children[0].length-1).insert("Some Text").insert({_type:'P'});
 
-makeHugeTable(opB, 100, 5);
+makeHugeTable(opB, 6000, 5);
 
 //doc = m.apply(doc, op)
 
@@ -122,7 +122,7 @@ store.apply(opC);
 
 var editor = e.Editor({store: store});
 
-
+var Selection = Slate.Selection;
 //var tf = new e.Document({obj: doc});
 e.friar.renderComponent(editor, preview);
 </script>

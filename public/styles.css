@@ -22,3 +22,12 @@ th, td {
 	text-align: left;
 	border: 1px solid pink;
 }
+
+textarea.hiddenTextArea {
+width: 100%;
+max-width: 800px;
+height: 50px;
+opacity: 0;
+position: absolute;
+left: -3000px;
+}

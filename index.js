@@ -4,4 +4,5 @@ module.exports = {
 	model:  require('./lib/model'),
 	server: require('./lib/server'),
 	Operations: require('./lib/operations'),
+	Selection: require('./lib/selection'),
 };
