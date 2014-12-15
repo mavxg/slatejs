@@ -75,7 +75,7 @@ function makeHugeTable(op, rows, cols) {
 	op.insert({_type:'Row'}).insert({_type:'THead'});
 	for (var r = 0; r < rows; r++) {
 		for (var c = 0; c < cols; c++) {
-			op.insert("Cell Content").insert({_type:'Cell'});
+			op.insert("Cell " + r + ":" + c ).insert({_type:'Cell'});
 		}
 		op.insert({_type:'Row'})
 	}
