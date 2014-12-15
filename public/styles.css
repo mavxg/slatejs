@@ -39,3 +39,21 @@ left: -3000px;
 ::selection {
     opacity: 0;
 }
+
+.editor {
+	position: relative;
+}
+
+.selection {
+	top: 0px;
+	left: 0px;
+	z-index: 100;
+}
+
+.selection div {
+	position: absolute;
+	background: rgba(0, 128, 236, 0.51);
+	box-sizing: border-box;
+	padding: 0;
+	margin: 0;
+}
