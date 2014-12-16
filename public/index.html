@@ -65,7 +65,6 @@ var doc = new m.Document(10,[
 		new m.Quote(18,["This is a",m.tag('strong',{})," really ",m.endtag('strong'),"important quote."])])
 	]);
 
-
 var op = new Slate.Operations().remove("Dummy").insert("Cool").end(doc.length);
 
 function makeHugeTable(op, rows, cols) {
@@ -98,8 +97,6 @@ opB.end(doc.length);
 //opB = opB.transform(op);
 
 var opC = new Slate.Operations().retain(480).remove('Cell').insert("Bell");
-
-
 
 var NonServerAdaptor = Slate.server.NonServerAdaptor;
 
