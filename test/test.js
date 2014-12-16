@@ -8,8 +8,8 @@ var UndoManager = require('../lib/undo');
 
 describe('Compose', function() {
 	var doc = new m.Document(1,[new m.P(2,["This is some text."])]);
-	var opA = new Operations().retain(4).insert(" really").end(doc.length);
-	var opB = new Operations().retain(4+7).insert(" actually").end(doc.length+7);
+	var opA = new Operations().retain(6).insert(" really").end(doc.length);
+	var opB = new Operations().retain(6+7).insert(" actually").end(doc.length+7);
 
 	it('Can compose inverse', function() {
 		var a = m.apply(doc, opA);
@@ -44,21 +44,23 @@ describe('Compose', function() {
 });
 
 describe('Apply', function() {
-	var doc = new m.Document(1,[new m.Section(2,[new m.P(4,["This is some text."])]), new m.Section(3,[])]);
+	var doc = new m.Document(1,[new 
+		m.Section(2,[new m.P(4,["This is some text."])]), 
+		new m.Section(3,[])]);
 	var opsB = new Operations()
-		.retain(20)
-		.insert('This is some text')
+		.retain(22)
 		.insert({_type:'P'})
+		.insert('This is some text')
 		.insert({_type:'Section'})
-		.insert('this is more text')
 		.insert({_type:'H3'})
+		.insert('this is more text')
 		.end(doc.length);
 
 	it('Can insert text into string', function() {
 		var ops = new Operations()
-			.retain(10)
+			.retain(13)
 			.insert('mething aweso')
-			.retain(12);
+			.retain(9);
 		var x = m.apply(doc, ops);
 		assert.equal(JSON.stringify(x), 
 			'{"type":"Document","id":1,"children":[{"type":"Section","id":2,"children":[{"type":"P","id":4,"children":["This is something awesome text."]}]},{"type":"Section","id":3,"children":[]}]}');
@@ -67,8 +69,8 @@ describe('Apply', function() {
 	it('Can insert paragraph into empty section', function() {
 		var y = m.apply(doc, opsB);
 		assert.equal(JSON.stringify(y),
-			'{"type":"Document","id":1,"children":[{"type":"Section","id":2,"children":[{"type":"P","id":4,"children":["This is some text."]}]},{"type":"Section","id":6,"children":[{"type":"P","id":5,"children":["This is some text"]}]},{"type":"Section","id":3,"children":[{"type":"H3","id":7,"children":["this is more text"]}]}]}');
-	});
+			'{"type":"Document","id":1,"children":[{"type":"Section","id":2,"children":[{"type":"P","id":4,"children":["This is some text."]}]},{"type":"Section","id":3,"children":[{"type":"P","id":5,"children":["This is some text"]}]},{"type":"Section","id":6,"children":[{"type":"H3","id":7,"children":["this is more text"]}]}]}');
+		});
 
 	it('Roundtrip apply and apply invert', function() {
 		var y = m.apply(m.apply(doc, opsB), opsB.invert());
@@ -79,21 +81,21 @@ describe('Apply', function() {
 describe('Undo manager', function() {
 	var doc = new m.Document(1,[new m.Section(2,[new m.P(4,["This is some text."])]), new m.Section(3,[])]);
 	var opsB = new Operations()
-		.retain(20)
-		.insert('This is some text')
+		.retain(22)
 		.insert({_type:'P'})
+		.insert('This is some text')
 		.insert({_type:'Section'})
-		.insert('this is more text')
 		.insert({_type:'H3'})
+		.insert('this is more text')
 		.end(doc.length);
 
 	var other = new Operations()
-		.retain(17)
+		.retain(18)
 		.insert(" that I want here.")
 		.end(doc.length);
 
 	var otherL = new Operations()
-		.retain(20)
+		.retain(22)
 		.insert("This comes before. ")
 		.end(doc.length);
 

@@ -49,6 +49,20 @@ var table = new m.Table(1, [
 	new m.TFoot(4,[
 		])]);
 
+var tdoc = new m.Document(1,[
+	new m.Section(2,[new m.P(4,["This is some text."])]), 
+	new m.Section(3,[])]);
+var topsB = new Slate.Operations()
+		.retain(22)
+		.insert({_type:'P'})
+		.insert('This is some text')
+		.insert({_type:'Section'})
+		.insert({_type:'H3'})
+		.insert('this is more text')
+		.end(tdoc.length);
+
+var ttdoc = m.apply(tdoc, topsB);
+
 var doc = new m.Document(10,[
 	new m.Section(12,[
 		new m.H1(16, ["Dummy document"]), 
@@ -65,30 +79,33 @@ var doc = new m.Document(10,[
 		new m.Quote(18,["This is a",m.tag('strong',{})," really ",m.endtag('strong'),"important quote."])])
 	]);
 
-var op = new Slate.Operations().remove("Dummy").insert("Cool").end(doc.length);
+var op = new Slate.Operations().retain(3).remove("Dummy").insert("Cool").end(doc.length);
+
 
 function makeHugeTable(op, rows, cols) {
 	var al = ['left'];
+	op.insert({_type:'Table'});
+	op.insert({attrib:'alignments', value:al});
+	op.insert({_type:'THead'}).insert({_type:'Row'});
 	for (var c = 0; c < cols; c++)
-		op.insert('Header').insert({_type:'Cell'});
-	op.insert({_type:'Row'}).insert({_type:'THead'});
+		op.insert({_type:'Cell'}).insert('Header');
+	op.insert({_type:'TBody'});
 	for (var r = 0; r < rows; r++) {
-		for (var c = 0; c < cols; c++) {
-			op.insert("Cell " + r + ":" + c ).insert({_type:'Cell'});
-		}
 		op.insert({_type:'Row'})
+		for (var c = 0; c < cols; c++) {
+			op.insert({_type:'Cell'}).insert("Cell " + r + ":" + c );
+		}
 	}
 	for (var c = 1; c < cols; c++)
 		al.push('right');
 
-	op.insert({_type:'TBody'});
-	op.insert({attrib:'alignments', value:al});
-	op.insert({_type:'Table'});
+
+
 }
 
-var opB = new Slate.Operations().retain(doc.children[0].length-1).insert("Some Text").insert({_type:'P'});
+var opB = new Slate.Operations().retain(doc.children[0].length-1).insert({_type:'P'}).insert("Some Text");
 
-makeHugeTable(opB, 6000, 5);
+makeHugeTable(opB, 60, 5);
 
 //doc = m.apply(doc, op)
 
@@ -115,7 +132,7 @@ function insertHugeTable(s, c) {
 
 store.apply(opB);
 opC.end(store.document.length);
-store.apply(opC);
+//store.apply(opC);
 
 var editor = e.Editor({store: store});
 
