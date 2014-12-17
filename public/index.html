@@ -79,6 +79,9 @@ var doc = new m.Document(10,[
 		new m.Quote(18,["This is a",m.tag('strong',{})," really ",m.endtag('strong'),"important quote."])])
 	]);
 
+//for debugging
+var cursor = doc.selectedNodes(17, 17)[0];
+
 var op = new Slate.Operations().retain(3).remove("Dummy").insert("Cool").end(doc.length);
 
 

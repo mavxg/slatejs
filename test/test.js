@@ -3,6 +3,7 @@ var expect = chai.expect;
 var assert = chai.assert;
 
 var Operations = require('../lib/operations');
+var Selection = require('../lib/selection');
 var m = require('../lib/model');
 var UndoManager = require('../lib/undo');
 
@@ -175,3 +176,94 @@ describe('Undo manager', function() {
 		assert.equal(JSON.stringify(y),JSON.stringify(doc));
 	});
 })
+
+
+describe('Selection', function() {
+	var table = new m.Table(1, [
+		m.attrib('alignments',['left','right']),
+		new m.THead(2,[
+			new m.Row(5,[
+				new m.Cell(6,["Some text to go in the cell."]), 
+				new m.Cell(15,["Header2"])])]), 
+		new m.TBody(3,[
+			new m.Row(7,[new m.Cell(8,[
+		"Text that is not bold before",
+		m.tag('strong',{}),
+		"Some bold text to go in the ",
+		m.tag('em',{}),"bold italic"," cell.",
+		m.endtag('strong'), " and not bold after.",
+		m.endtag('em')]),
+				new m.Cell(17,[m.attrib('rowSpan',2),"99"])
+			]),
+			new m.Row(27,[new m.Cell(28,[
+		"Text that is not bold before",
+		m.tag('strong',{}),
+		"Some bold text to go in the ",
+		m.tag('em',{}),"bold italic"," cell.",
+		m.endtag('strong'), " and not bold after.",
+		m.endtag('em')])
+			]),
+			new m.Row(37,[new m.Cell(38,[m.attrib('colSpan',2),
+		"Text that is not bold before",
+		m.tag('strong',{}),
+		"Some bold text to go in the ",
+		m.tag('em',{}),"bold italic"," cell.",
+		m.endtag('strong'), " and not bold after.",
+		m.endtag('em')])
+			])]), 
+		new m.TFoot(4,[
+			])]);
+
+	var doc = new m.Document(10,[
+	new m.Section(12,[
+		new m.H1(16, ["Dummy document"]), 
+		new m.P(14,["This is some text. Lorem ipsum dolor",m.endtag('strong')," sit amet, consectetur adipisicing elit. Corrupti ",m.tag('a',{href: "http://google.co.uk"}),"vitae",m.endtag('a'),", aliquid ex necessitatibus repellat",m.tag('sup',{}),"TM",m.endtag('sup')," a illo fuga dolore aperiam totam tempore nisi neque delectus labore, nihil quae dignissimos dolores mollitia? Vel sunt neque voluptatibus excepturi laboriosam possimus adipisci quidem dolores, omnis nemo dolore",m.tag('strong',{})," eligendi blanditiis, voluptatem in doloribus hic aperiam."])]), 
+	new m.Section(13,[
+		table, 
+		new m.P(9,["This is a test"]),
+		new m.Ulli(20,["First list item"]),
+		new m.Ulli(21,["Second list item"]),
+		new m.Olli(22,["First list item"]),
+		new m.Olli(23,["Second list item"]),
+		new m.Code(24,["Some code here"]),
+		new m.Code(25,["Some more code here"]),
+		new m.Quote(18,["This is a",m.tag('strong',{})," really ",m.endtag('strong'),"important quote."])])
+	]);
+
+	it('Can select in H1 with correct offset', function() {
+		var toff = 12;
+		var pos = doc.positionFromPath([16,12,10],toff);
+		var cursor = doc.selectedNodes(pos, pos)[0];
+		var textOff = cursor.node.textOffset(cursor.start);
+		assert.equal(doc.children[0].children[0], cursor.node);
+		assert.equal(toff, textOff);
+	});
+	it('Can select end of node', function() {
+		var toff = 14;
+		var pos = doc.positionFromPath([16,12,10],toff);
+		var cursor = doc.selectedNodes(pos, pos)[0];
+		var textOff = cursor.node.textOffset(cursor.start);
+		assert.equal(doc.children[0].children[0], cursor.node);
+		assert.equal(toff, textOff);
+	});
+	it('Can select end of document', function() {
+		var toff = 33;
+		var pos = doc.positionFromPath([18,13,10],toff);
+		var cursor = doc.selectedNodes(pos, pos)[0];
+		var textOff = cursor.node.textOffset(cursor.start);
+		assert.equal(doc.children[1].children[8], cursor.node);
+		assert.equal(toff, textOff);
+	});
+	it('Can select in table cell', function() {
+		var toff = 7;
+		var pos = doc.positionFromPath([8,7,3,1,13,10],toff);
+		var cursor = doc.selectedNodes(pos, pos)[0];
+		var textOff = cursor.node.textOffset(cursor.start);
+		assert.equal(
+			doc.children[1].children[0].children[2].children[0].children[0], 
+			cursor.node);
+		assert.equal(toff, textOff);
+	});
+})
+
+
