@@ -31,15 +31,15 @@ opacity: 0;
 position: absolute;
 left: -3000px;
 }
-
-::-moz-selection { /* Code for Firefox */
+/*
+::-moz-selection {
     opacity:  0;
 }
 
 ::selection {
     opacity: 0;
 }
-
+*/
 .editor {
 	position: relative;
 }
