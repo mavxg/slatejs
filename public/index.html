@@ -76,7 +76,8 @@ var doc = new m.Document(10,[
 		new m.Olli(23,["Second list item"]),
 		new m.Code(24,["Some code here"]),
 		new m.Code(25,["Some more code here"]),
-		new m.Quote(18,["This is a",m.tag('strong',{})," really ",m.endtag('strong'),"important quote."])])
+		new m.Quote(100,[m.tag('strong',{}),"This is a really ",m.endtag('strong'),"important quote."]),
+		new m.Quote(18,["This is a ",m.tag('strong',{}),"really ",m.endtag('strong'),"important quote."])])
 	]);
 
 //for debugging
