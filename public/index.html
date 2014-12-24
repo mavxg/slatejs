@@ -109,7 +109,7 @@ function makeHugeTable(op, rows, cols) {
 
 var opB = new Slate.Operations().retain(doc.children[0].length-1).insert({_type:'P'}).insert("Some Text");
 
-makeHugeTable(opB, 60, 5);
+makeHugeTable(opB, 6000, 5);
 
 //doc = m.apply(doc, op)
 
