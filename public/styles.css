@@ -1,7 +1,17 @@
 body {
 	font-family: sans-serif;
 	color: #114;
+	line-height: 28.5px;
+	font-size: 17px;
 }
+
+/* fix line height change due to sub/sup */
+sup, sub {
+   vertical-align: baseline;
+   position: relative;
+   top: -0.4em;
+}
+sub { top: 0.4em; }
 
 div.content {
 	margin: auto;

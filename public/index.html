@@ -17,7 +17,6 @@ var e = Slate.editor;
 
 
 var table = new m.Table(1, [
-	m.attrib('alignments',['left','right']),
 	new m.THead(2,[
 		new m.Row(5,[new m.Cell(6,["Some text to go in the cell."]), new m.Cell(15,["Header2"])])]), 
 	new m.TBody(3,[
@@ -28,7 +27,7 @@ var table = new m.Table(1, [
 	m.tag('em',{}),"bold italic"," cell.",
 	m.endtag('strong'), " and not bold after.",
 	m.endtag('em')]),
-			new m.Cell(17,[m.attrib('rowSpan',2),"99"])
+			new m.Cell(17,["99"], {rowSpan: 2})
 		]),
 		new m.Row(27,[new m.Cell(28,[
 	"Text that is not bold before",
@@ -38,16 +37,16 @@ var table = new m.Table(1, [
 	m.endtag('strong'), " and not bold after.",
 	m.endtag('em')])
 		]),
-		new m.Row(37,[new m.Cell(38,[m.attrib('colSpan',2),
+		new m.Row(37,[new m.Cell(38,[
 	"Text that is not bold before",
 	m.tag('strong',{}),
 	"Some bold text to go in the ",
 	m.tag('em',{}),"bold italic"," cell.",
 	m.endtag('strong'), " and not bold after.",
-	m.endtag('em')])
+	m.endtag('em')], {colSpan: 2})
 		])]), 
 	new m.TFoot(4,[
-		])]);
+		])], {alignments: ['left','right']});
 
 var tdoc = new m.Document(1,[
 	new m.Section(2,[new m.P(4,["This is some text."])]), 
@@ -88,8 +87,8 @@ var op = new Slate.Operations().retain(3).remove("Dummy").insert("Cool").end(doc
 
 function makeHugeTable(op, rows, cols) {
 	var al = ['left'];
-	op.insert({_type:'Table'});
-	op.insert({attrib:'alignments', value:al});
+	op.insert({_type:'Table', attributes: {alignments: al}});
+	//op.insert({attrib:'alignments', value:al});
 	op.insert({_type:'THead'}).insert({_type:'Row'});
 	for (var c = 0; c < cols; c++)
 		op.insert({_type:'Cell'}).insert('Header');
@@ -137,6 +136,15 @@ function insertHugeTable(s, c) {
 store.apply(opB);
 opC.end(store.document.length);
 //store.apply(opC);
+
+var pth = store.document.path(441);
+var tblp = pth[2];
+var tbl = tblp.node;
+var ops = new Slate.Operations().retain(441-tblp.offset);
+tbl.insertRows(ops, 2, 3);
+ops.end(store.document.length);
+store.apply(ops);
+
 
 var editor = e.Editor({store: store});
 
