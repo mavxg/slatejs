@@ -179,8 +179,9 @@ describe('Undo manager', function() {
 
 
 describe('Selection', function() {
+	/*
 	var table = new m.Table(1, [
-		m.attrib('alignments',['left','right']),
+		//m.attrib('alignments',['left','right']),
 		new m.THead(2,[
 			new m.Row(5,[
 				new m.Cell(6,["Some text to go in the cell."]), 
@@ -263,7 +264,10 @@ describe('Selection', function() {
 			doc.children[1].children[0].children[2].children[0].children[0], 
 			cursor.node);
 		assert.equal(toff, textOff);
-	});
+	});*/
 })
 
+
+describe('Commands', function() {
+});
 
