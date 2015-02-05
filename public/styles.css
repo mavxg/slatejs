@@ -13,24 +13,44 @@ sup, sub {
 }
 sub { top: 0.4em; }
 
+
 div.content {
 	margin: auto;
-	max-width: 800px;
-	border: 1px solid pink;
+	max-width: 700px;
 }
 
-section {
-	border-bottom: 1px solid blue;
+section hr {
+	display: block;
+	width: 100px;
+	margin: 3em auto 3em auto;
+	border: 0;
+	border-top: 1px solid rgba(0,0,0,0.15);
 }
 
 table {
 	width: 100%;
-	border: 1px solid pink;
+	border-collapse: collapse;
+	border-spacing: 0;
+	empty-cells: show;
+	border: 1px solid #cbcbcb;
 }
 
 th, td {
 	text-align: left;
-	border: 1px solid pink;
+	border-left: 1px solid #cbcbcb;
+	border-width: 0 0 0 1px;
+	font-size: inherit;
+	margin: 0;
+	overflow: visible;
+	padding: .5em 1em;
+	border-bottom: 1px solid #cbcbcb;
+}
+
+thead {
+background: #e0e0e0;
+color: #000;
+text-align: left;
+vertical-align: bottom;
 }
 
 textarea.hiddenTextArea {
@@ -62,8 +82,13 @@ left: -3000px;
 
 .selection div {
 	position: absolute;
-	background: rgba(0, 128, 236, 0.51);
+	background: rgba(114,190,215,0.5);
 	box-sizing: border-box;
 	padding: 0;
 	margin: 0;
+}
+
+pre {
+	padding: 1em;
+	background: rgba(0,0,0,0.05);
 }
