@@ -17,9 +17,10 @@ var e = Slate.editor;
 
 
 var table = new m.Table(1, [
-	new m.THead(2,[
-		new m.Row(5,[new m.Cell(6,["Some text to go in the cell."]), new m.Cell(15,["Header2"])])]), 
-	new m.TBody(3,[
+	//new m.THead(2,[
+		new m.Row(5,[new m.Cell(6,["Some text to go in the cell."]), new m.Cell(15,["Header2"])]),
+	//]), 
+	//new m.TBody(3,[
 		new m.Row(7,[new m.Cell(8,[
 	"Text that is not bold before",
 	m.tag('strong',{}),
@@ -44,9 +45,10 @@ var table = new m.Table(1, [
 	m.tag('em',{}),"bold italic"," cell.",
 	m.endtag('strong'), " and not bold after.",
 	m.endtag('em')], {colSpan: 2})
-		])]), 
-	new m.TFoot(4,[
-		])], {alignments: ['left','right']});
+		]),
+	//	]), 
+	//new m.TFoot(4,[])
+	], {alignments: ['left','right']});
 
 var tdoc = new m.Document(1,[
 	new m.Section(2,[new m.P(4,["This is some text."])]), 
@@ -89,10 +91,11 @@ function makeHugeTable(op, rows, cols) {
 	var al = ['left'];
 	op.insert({_type:'Table', attributes: {alignments: al}});
 	//op.insert({attrib:'alignments', value:al});
-	op.insert({_type:'THead'}).insert({_type:'Row'});
+	//op.insert({_type:'THead'});
+	op.insert({_type:'Row'});
 	for (var c = 0; c < cols; c++)
 		op.insert({_type:'Cell'}).insert('Header');
-	op.insert({_type:'TBody'});
+	//op.insert({_type:'TBody'});
 	for (var r = 0; r < rows; r++) {
 		op.insert({_type:'Row'})
 		for (var c = 0; c < cols; c++) {
