@@ -40,6 +40,9 @@
     "url": "https://github.com/mavxg/slatejs/issues"
   },
   "dependencies": {
-    "friar": "git://github.com/mavxg/friar"
+    "friar": "git://github.com/mavxg/friar",
+    "share": "^0.7.17",
+    "slate0": "git://github.com/mavxg/slate0",
+    "undomanager": "git://github.com/mavxg/undomanager"
   }
 }
