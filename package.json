@@ -40,6 +40,7 @@
     "url": "https://github.com/mavxg/slatejs/issues"
   },
   "dependencies": {
+    "dummy-sharejs-connection": "git://github.com/mavxg/dummy-sharejs-connection",
     "friar": "git://github.com/mavxg/friar",
     "share": "^0.7.17",
     "slate0": "git://github.com/mavxg/slate0",
