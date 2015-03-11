@@ -9,6 +9,5 @@ sharejs.registerType(slate0.type);
 var ottypes = {};
 ottypes[slate0.type.name] = ottypes[slate0.type.uri] = slate0.type;
 
-
 describe('ShareJS Integration', function() {
 });

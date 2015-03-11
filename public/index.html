@@ -121,39 +121,41 @@ opB.end(doc.length);
 
 var opC = new Slate.Operations().retain(480).remove('Cell').insert("Bell");
 
-var NonServerAdaptor = Slate.server.NonServerAdaptor;
+var dummy = new Slate.Dummy(Slate.ottypes);
 
-var serverAdaptor = new NonServerAdaptor();
+var sjs = new Slate.sharejs.Connection(dummy);
+sjs.debug = true;
+var sharedoc = sjs.get('play','anonymous');
+sharedoc.subscribe();
+var store;
 
-var store = new Slate.Store(serverAdaptor);
-store.document = doc;
-
-function insertHugeTable(s, c) {
-	var doc = store.document;
-	var op = new Slate.Operations().retain(doc.children[0].length-1);
-	makeHugeTable(op, s, c);
-	op.end(doc.length);
-	store.apply(op);
-}
-
-store.apply(opB);
-opC.end(store.document.length);
 //store.apply(opC);
 
-var pth = store.document.path(441);
-var tblp = pth[2];
-var tbl = tblp.node;
-var ops = new Slate.Operations().retain(441-tblp.offset);
-tbl.insertRows(ops, 2, 3);
-ops.end(store.document.length);
-store.apply(ops);
-
-
-var editor = e.Editor({store: store});
+var editor;
 
 var Selection = Slate.Selection;
+
+sharedoc.whenReady(function() {
+	if (!sharedoc.type) sharedoc.create('slate0', doc);
+	store = new Slate.Store(sharedoc);
+
+	
+	store.apply(opB);
+	var pth = store.document().path(441);
+	var tblp = pth[2];
+	var tbl = tblp.node;
+	var ops = new Slate.Operations().retain(441-tblp.offset);
+	tbl.insertRows(ops, 2, 3);
+	ops.end(store.document().length);
+	store.apply(ops);
+
+	editor = e.Editor({store: store});
+
+	e.friar.renderComponent(editor, preview);
+
+});
 //var tf = new e.Document({obj: doc});
-e.friar.renderComponent(editor, preview);
+
 </script>
 </body>
 </html>
