@@ -17,7 +17,7 @@ var e = Slate.editor;
 var doc = Slate.parse('(doc (section ' +
 	'(h1 "Welcome to SlateJS") ' +
 	'(p "Welcome to your editor.") ' + 
-	'(p "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Corrupti, aliquid ex necessitatibus repellatTM a illo fuga dolore aperiam totam tempore nisi neque delectus labore, nihil quae dignissimos dolores mollitia? Vel sunt neque voluptatibus excepturi laboriosam possimus adipisci quidem dolores, omnis nemo dolore eligendi blanditiis, voluptatem in doloribus hic aperiam.") ' + 
+	'(p [[76,{}],[2,{"sub":true}],[24,{}],[2,{"sup":true}],[76,{}],[4,{"href":"http://google.co.uk"}],[189,{}]]"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Corrupti, aliquid ex necessitatibus repellatTM a illo fuga dolore aperiam totam tempore nisi neque delectus labore, nihil quae dignissimos dolores mollitia? Vel sunt neque voluptatibus excepturi laboriosam possimus adipisci quidem dolores, omnis nemo dolore eligendi blanditiis, voluptatem in doloribus hic aperiam.") ' + 
 	'{"alignments":["left","right"]}(table '+
 		'(row (cell "Some text to go in the cell") (cell "Header2")) ' +
 		'(row (cell [[29,{}],[28,{"strong":true}],[17,{"strong":true,"em":true}],[20,{"em":true}]]"Text this is not bold before Some bold text to go in the bold italic cell. and not bold after.") {"rowSpan":2}(cell "99")) ' +
@@ -27,9 +27,17 @@ var doc = Slate.parse('(doc (section ' +
 	') (section ' +
 	'(h1 "Another Section") ' +
 	'(p "Another paragraph in a another section") ' +
+	'(code "This is some code") ' +
+	'(code "This is more code") ' +
 	'(ulli "First list item") ' +
+	'{"indent":2}(ulli "First sub list item") ' +
+	'{"indent":3}(ulli "First sub sub list item") ' +
 	'(ulli "Second list item") ' +
+	'{"indent":2}(ulli "First sub list item") ' +
+	'{"indent":2}(ulli "Second sub list item") ' +
 	'(olli "First list item") ' +
+	'{"indent":2}(olli "First sub list item") ' +
+	'{"indent":2}(olli "Second sub list item") ' +
 	'(olli "Second list item") ' +
 	'(blockquote "This is a really important quote.") ' +
 	'(pullquote "This is another really important quote.") ' +
