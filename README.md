@@ -10,12 +10,18 @@ npm test -- run tests
 
 ## TODO
 
-* [ ] Fix bold selection bug on Chrome (not Safari)
-* [ ] Check bold selection bug on IE
-* [ ] Check bold selection bug on firefox.
+* [ ] S-Expression document renderer
+* [ ] Inline selection renderer
+* [ ] Minimal selection update check
+* [ ] Keyboard shortcut system
+* [ ] Table editor actions
+* [ ] Hookup Qube
+* [ ] Render out of date code (i.e. not yet calculated)
 
 ## Long term todo
 
 * [ ] Add bidirectional support.
       Look at how codemirror supports this in their selections.
+
+
 

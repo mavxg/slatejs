@@ -1,18 +1,18 @@
-var slate0 = require('slate0');
+var ottype = require('ot-sexpr');
 var sharejs = require('share/lib/client');
-sharejs.registerType(slate0.type);
+sharejs.registerType(ottype);
 
 var ottypes = {};
-ottypes[slate0.type.name] = ottypes[slate0.type.uri] = slate0.type;
+ottypes[ottype.name] = ottypes[ottype.uri] = ottype;
 
 module.exports = {
 	editor: require('./lib/editor'),
-	slate0: slate0,
+	type: ottype,
 	sharejs: sharejs,
 	ottypes: ottypes,
 	Dummy: require('dummy-sharejs-connection'),
-	model:  slate0.model,
 	Store: require('./lib/store'),
-	Operations: slate0.Operations,
-	Selection: slate0.Cursor,
+	Selection: ottype.Selection,
+	Region: ottype.Region,
+	parse: ottype.parse,
 };
