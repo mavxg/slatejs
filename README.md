@@ -10,8 +10,8 @@ npm test -- run tests
 
 ## TODO
 
-* [ ] S-Expression document renderer
-* [ ] Inline selection renderer
+* [X] S-Expression document renderer
+* [X] Inline selection renderer
 * [ ] Minimal selection update check
 * [ ] Keyboard shortcut system
 * [ ] Table editor actions

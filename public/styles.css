@@ -74,6 +74,17 @@ left: -3000px;
 	position: relative;
 }
 
+.selected {
+	background: rgba(114,190,215,0.5);
+}
+
+span.cursor:before {
+	content: "";
+	margin: -1px;
+	border: 1px solid red;
+	z-index: 100;
+}
+
 .selection {
 	top: 0px;
 	left: 0px;
