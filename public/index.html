@@ -51,6 +51,12 @@ var doc = Slate.parse('(doc (section ' +
 	'(olli "Second list item") ' +
 	'(blockquote "This is a really important quote.") ' +
 	'(pullquote "This is another really important quote.") ' +
+    '{"alignments":["left","right"]}(table '+
+		'(row (cell "Some text to go in the cell") (cell "Header2")) ' +
+		'(row (cell [[29,{}],[28,{"strong":true}],[17,{"strong":true,"em":true}],[20,{"em":true}]]"Text this is not bold before Some bold text to go in the bold italic cell. and not bold after.") {"rowSpan":2}(cell "99")) ' +
+		'(row (cell [[29,{}],[28,{"strong":true}],[17,{"strong":true,"em":true}],[20,{"em":true}]]"Text this is not bold before Some bold text to go in the bold italic cell. and not bold after.")) ' +
+		'(row {"colSpan":2}(cell [[29,{}],[28,{"strong":true}],[17,{"strong":true,"em":true}],[20,{"em":true}]]"Text this is not bold before Some bold text to go in the bold italic cell. and not bold after.")) ' +
+	') ' + //end table
 	'))')[0];
 
 
@@ -61,7 +67,7 @@ sjs.debug = true;
 var sharedoc = sjs.get('play','anonymous');
 sharedoc.subscribe();
 
-var sel = new Selection([new Region(248,15), new Region(298,348), new Region(380), new Region(495,400), new Region(870,830), new Region(1130,1070), new Region(1200,1300)]);
+var sel = new Selection([new Region(248,15), new Region(298,348), new Region(380), new Region(495,400), new Region(870,830), new Region(1130,1070), new Region(1200,1300), new Region(1743+8,1734)]);
 
 var store;
 
