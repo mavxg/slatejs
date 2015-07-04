@@ -12,11 +12,18 @@ npm test -- run tests
 
 * [X] S-Expression document renderer
 * [X] Inline selection renderer
+* [X] FIX: Selection off by one error
+* [ ] FIX: Selection fails outside lines
+* [ ] FIX: Selection fails in code
 * [ ] Minimal selection update check
 * [ ] Keyboard shortcut system
 * [ ] Table editor actions
 * [ ] Hookup Qube
 * [ ] Render out of date code (i.e. not yet calculated)
+
+
+//TODO: make shouldComponentUpdate part of the friar class so that it can return false if only the selection has changed.
+
 
 ## Long term todo
 

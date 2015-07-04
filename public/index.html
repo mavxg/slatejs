@@ -59,6 +59,7 @@ var doc = Slate.parse('(doc (section ' +
 	') ' + //end table
 	'))')[0];
 
+//doc = Slate.parse('(doc (section (h1 "Welcome to SlateJS")))')[0];
 
 var dummy = new Slate.Dummy(Slate.ottypes);
 
@@ -67,7 +68,7 @@ sjs.debug = true;
 var sharedoc = sjs.get('play','anonymous');
 sharedoc.subscribe();
 
-var sel = new Selection([new Region(248,15), new Region(298,348), new Region(380), new Region(495,400), new Region(870,830), new Region(1130,1070), new Region(1200,1300), new Region(1743+8,1734)]);
+var sel = new Selection([new Region(12,9)]); //, new Region(298,348), new Region(380), new Region(495,400), new Region(870,830), new Region(1130,1070), new Region(1200,1300), new Region(1743+8,1734)]);
 
 var store;
 
