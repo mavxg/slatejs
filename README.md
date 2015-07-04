@@ -16,6 +16,7 @@ npm test -- run tests
 * [X] FIX: Selection fails outside lines
 * [ ] FIX: Selection unstable under selection spans
 * [X] FIX: Selection fails in code
+* [X] Multiple selection
 * [ ] Minimal selection update check
 * [ ] Keyboard shortcut system
 * [ ] Table editor actions
