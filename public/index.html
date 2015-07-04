@@ -17,7 +17,7 @@ var e = Slate.editor;
 var Selection = Slate.Selection;
 var Region = Slate.Region;
 
-var doc = Slate.parse('(doc (section ' +
+var doc = '(doc (section ' +
 	'(h1 "Welcome to SlateJS") ' +
 	'(p "Welcome to your editor.") ' + 
 	'(p [[76,{}],[2,{"sub":true}],[24,{}],[2,{"sup":true}],[76,{}],[16,{"href":"http://google.co.uk"}],[177,{}]]"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Corrupti, aliquid ex necessitatibus repellatTM a illo fuga dolore aperiam totam tempore nisi neque delectus labore, nihil quae dignissimos dolores mollitia? Vel sunt neque voluptatibus excepturi laboriosam possimus adipisci quidem dolores, omnis nemo dolore eligendi blanditiis, voluptatem in doloribus hic aperiam.") ' + 
@@ -57,7 +57,7 @@ var doc = Slate.parse('(doc (section ' +
 		'(row (cell [[29,{}],[28,{"strong":true}],[17,{"strong":true,"em":true}],[20,{"em":true}]]"Text this is not bold before Some bold text to go in the bold italic cell. and not bold after.")) ' +
 		'(row {"colSpan":2}(cell [[29,{}],[28,{"strong":true}],[17,{"strong":true,"em":true}],[20,{"em":true}]]"Text this is not bold before Some bold text to go in the bold italic cell. and not bold after.")) ' +
 	') ' + //end table
-	'))')[0];
+	'))'
 
 //doc = Slate.parse('(doc (section (h1 "Welcome to SlateJS")))')[0];
 
