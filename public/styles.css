@@ -78,11 +78,37 @@ left: -3000px;
 	background: rgb(179,216,253);
 }
 
+span {
+	padding-bottom: 5px;
+	padding-top: 3px;
+}
+
 span.cursor:before {
 	content: "";
+
+	padding-bottom: 5px;
+	padding-top: 3px;
 	margin: -1px;
 	border: 1px solid red;
 	z-index: 100;
+}
+
+sup, sub {
+  font-size: 0.7em;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+  top: -0.4em;
+}
+sub {
+	top: 0.4em;
+}
+
+sup span {
+	padding-bottom: 11px;
+}
+sub span {
+	padding-top: 12.5px;
 }
 
 .selection {
