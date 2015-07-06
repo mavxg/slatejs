@@ -26,11 +26,9 @@ npm test -- run tests
 * [ ] Replace should balance missing closes by inserting after your insert.
       and missing opens by inserting before your insert.
 
+* [ ] discard nop in livedb caused by _apply exception returning same doc.
+
 ## Bugs
-
-* thrown exception in apply causes the application to be left in a broken state (locked)
-
-* multiple spaces need to render as multiple spaces.
 
 * Alternating dissappearing cursor when typing with multiple selections.
 
