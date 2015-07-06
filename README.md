@@ -18,11 +18,26 @@ npm test -- run tests
 * [X] FIX: Selection fails in code
 * [X] Multiple selection
 * [ ] Minimal selection update check
-* [ ] Keyboard shortcut system
+* [ ] Keyboard shortcut system *** 
 * [ ] Table editor actions
 * [ ] Hookup Qube
 * [ ] Render out of date code (i.e. not yet calculated)
 
+## Bugs
+
+* thrown exception in apply causes the application to be left in a broken state (locked)
+
+* multiple spaces need to render as multiple spaces.
+
+* Alternating dissappearing cursor when typing with multiple selections.
+
+* Selection transform bug when overtyping with mulitple selections.
+
+* cannot delete a paragraph boundary. (Note, should delete whole table.)
+
+* replace should adjust selection first.
+
+* Random lockup on right click for all browsers. Will not focus the textarea again.
 
 //TODO: make shouldComponentUpdate part of the friar class so that it can return false if only the selection has changed.
 
