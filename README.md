@@ -23,6 +23,9 @@ npm test -- run tests
 * [ ] Hookup Qube
 * [ ] Render out of date code (i.e. not yet calculated)
 
+* [ ] Replace should balance missing closes by inserting after your insert.
+      and missing opens by inserting before your insert.
+
 ## Bugs
 
 * thrown exception in apply causes the application to be left in a broken state (locked)
@@ -33,7 +36,7 @@ npm test -- run tests
 
 * Selection transform bug when overtyping with mulitple selections.
 
-* cannot delete a paragraph boundary. (Note, should delete whole table.)
+* cannot delete a boundary over list items (with double indent) or tables. (Note, should delete whole table.)
 
 * replace should adjust selection first.
 
