@@ -15,4 +15,5 @@ module.exports = {
 	Selection: ottype.Selection,
 	Region: ottype.Region,
 	parse: ottype.parse,
+	plugins: require('./lib/plugins'),
 };

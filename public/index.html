@@ -75,12 +75,14 @@ var store;
 
 var editor;
 
+var plugins = Slate.plugins;
+
 sharedoc.whenReady(function() {
 	if (!sharedoc.type) sharedoc.create('sexpr', doc);
 	store = new Slate.Store(sharedoc);
 
 	store.select(sel);
-	editor = e.Editor({store: store});
+	editor = e.Editor({store: store, plugins:[plugins.base, plugins.table]});
 
 	e.friar.renderComponent(editor, preview);
 });

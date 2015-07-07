@@ -18,7 +18,7 @@ npm test -- run tests
 * [X] FIX: Selection fails in code
 * [X] Multiple selection
 * [ ] Minimal selection update check
-* [ ] Keyboard shortcut system *** 
+* [X] Keyboard shortcut system *** 
 * [ ] Table editor actions
 * [ ] Hookup Qube
 * [ ] Render out of date code (i.e. not yet calculated)
