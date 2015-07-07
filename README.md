@@ -30,7 +30,10 @@ npm test -- run tests
 
 ## Bugs
 
-* Alternating dissappearing cursor when typing with multiple selections.
+* List items should nest inside other items not at the list level..
+
+* -Alternating dissappearing cursor when typing with multiple selections.
+  *** because the selection is getting reversed somewhere.- FIXED.
 
 * Selection transform bug when overtyping with mulitple selections.
 
