@@ -22,9 +22,12 @@ npm test -- run tests
 * [ ] Table editor actions
 * [ ] Hookup Qube
 * [ ] Render out of date code (i.e. not yet calculated)
+* [ ] Copy/Cut (inc table)
+* [ ] Paste (inc table)
 
 * [ ] Replace should balance missing closes by inserting after your insert.
-      and missing opens by inserting before your insert.
+      and missing opens by inserting before your insert. (or just collapse the
+      selection like Google Docs)
 
 * [ ] discard nop in livedb caused by _apply exception returning same doc.
 
@@ -32,16 +35,11 @@ npm test -- run tests
 
 * List items should nest inside other items not at the list level..
 
-* -Alternating dissappearing cursor when typing with multiple selections.
-  *** because the selection is getting reversed somewhere.- FIXED.
-
 * Selection transform bug when overtyping with mulitple selections.
 
 * cannot delete a boundary over list items (with double indent) or tables. (Note, should delete whole table.)
 
 * replace should adjust selection first.
-
-* Random lockup on right click for all browsers. Will not focus the textarea again.
 
 //TODO: make shouldComponentUpdate part of the friar class so that it can return false if only the selection has changed.
 
