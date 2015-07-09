@@ -35,6 +35,14 @@ npm test -- run tests
       and missing opens by inserting before your insert. (or just collapse the
       selection like Google Docs)
 
+# IDEA
+
+QUBE integration. Have an output table format that is a table where the expressions
+you type get evaluated and you get an output. If it varies over multiple dimensions then they become pivot slices. This is then an output table that is formatted like an input table. Entered like a table but evaluates like a pivot table output.
+
+You should even be able to put something down the side to varie it over ...
+
+
 ## Bugs
 
 * List items should nest inside other items not at the list level..
