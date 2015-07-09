@@ -24,6 +24,9 @@ npm test -- run tests
 * [ ] Render out of date code (i.e. not yet calculated)
 * [ ] Copy/Cut (inc table)
 * [ ] Paste (inc table)
+* [ ] Scroll to cursor
+* [ ] Movement commands
+* [ ] Delete commands
 
 * [ ] Replace should balance missing closes by inserting after your insert.
       and missing opens by inserting before your insert. (or just collapse the
