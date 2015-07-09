@@ -58,6 +58,7 @@ var doc = '(doc (section ' +
 		'(row (cell [[29,{}],[28,{"strong":true}],[17,{"strong":true,"em":true}],[20,{"em":true}]]"Text this is not bold before Some bold text to go in the bold italic cell. and not bold after.")) ' +
 		'(row {"colSpan":2}(cell [[29,{}],[28,{"strong":true}],[17,{"strong":true,"em":true}],[20,{"em":true}]]"Text this is not bold before Some bold text to go in the bold italic cell. and not bold after.")) ' +
 	') ' + //end table
+	'(p "") ' + //empty paragraph we need at the end.
 	'))'
 
 //doc = Slate.parse('(doc (section (h1 "Welcome to SlateJS")))')[0];
