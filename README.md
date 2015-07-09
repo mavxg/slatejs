@@ -28,11 +28,12 @@ npm test -- run tests
 * [ ] Movement commands
 * [ ] Delete commands
 
+* [ ] discard nop in livedb caused by _apply exception returning same doc.
+
+* [ ] eraseText(region) on doc
 * [ ] Replace should balance missing closes by inserting after your insert.
       and missing opens by inserting before your insert. (or just collapse the
       selection like Google Docs)
-
-* [ ] discard nop in livedb caused by _apply exception returning same doc.
 
 ## Bugs
 
