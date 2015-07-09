@@ -41,6 +41,10 @@ npm test -- run tests
 
 * replace should adjust selection first.
 
+* Double character insert under some conditions (seems to be caused by critical regions)
+
+* Fast >(space) doesn't trigger key combination.
+
 //TODO: make shouldComponentUpdate part of the friar class so that it can return false if only the selection has changed.
 
 
