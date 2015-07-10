@@ -24,8 +24,8 @@ npm test -- run tests
 * [ ] Render out of date code (i.e. not yet calculated)
 * [ ] Copy/Cut (inc table)
 * [ ] Paste (inc table)
-* [ ] Scroll to cursor
-* [ ] Movement commands
+* [X] Scroll to cursor
+* [X] Movement commands
 * [ ] Delete commands
 
 * [ ] discard nop in livedb caused by _apply exception returning same doc.
