@@ -42,6 +42,8 @@ you type get evaluated and you get an output. If it varies over multiple dimensi
 
 You should even be able to put something down the side to varie it over ...
 
+(probably need columns --- before the rows in a table)
+
 
 ## Bugs
 
