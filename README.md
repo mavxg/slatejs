@@ -14,7 +14,7 @@ npm test -- run tests
 * [X] Inline selection renderer
 * [X] FIX: Selection off by one error
 * [X] FIX: Selection fails outside lines
-* [ ] FIX: Selection unstable under selection spans
+* [X] FIX: Selection unstable under selection spans
 * [X] FIX: Selection fails in code
 * [X] Multiple selection
 * [ ] Minimal selection update check
@@ -26,11 +26,13 @@ npm test -- run tests
 * [ ] Paste (inc table)
 * [X] Scroll to cursor
 * [X] Movement commands
-* [ ] Delete commands
+* [X] Delete commands
+* [ ] Attribute on paragraphs (??? how should it deal with tables
+	  - attribute if in vs attribute only if fully selected.)
 
 * [ ] discard nop in livedb caused by _apply exception returning same doc.
 
-* [ ] eraseText(region) on doc
+* [X] eraseText(region) on doc //just a replaceText with ""
 * [ ] Replace should balance missing closes by inserting after your insert.
       and missing opens by inserting before your insert. (or just collapse the
       selection like Google Docs)
@@ -44,12 +46,18 @@ You should even be able to put something down the side to varie it over ...
 
 (probably need columns --- before the rows in a table)
 
+* IDEA: lens/scratch sidebar. Show calculations pulled out to the side and how they change
+  when you change the model.
+
 
 ## Bugs
 
 * List items should nest inside other items not at the list level..
 
 * Selection transform bug when overtyping with mulitple selections.
+
+* line up doesn't work from after a freshly created section break.
+   or TO or FROM a new line
 
 * cannot delete a boundary over list items (with double indent) or tables. (Note, should delete whole table.)
 
