@@ -72,6 +72,7 @@ left: -3000px;
 */
 .editor {
 	position: relative;
+	/*white-space: pre-wrap;*/
 }
 
 .selected {
@@ -83,8 +84,7 @@ span {
 	padding-top: 3px;
 }
 
-span.cursor:before {
-	content: "";
+span.cursor {
 
 	padding-bottom: 5px;
 	padding-top: 3px;
