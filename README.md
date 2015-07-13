@@ -21,16 +21,11 @@ npm test -- run tests
 * [X] Keyboard shortcut system *** 
 * [ ] Table editor actions
 	(in google docs these only happen on the last table selected when multiple tables are selected.)
-	- Insert table (2x default)
-		- Selection into first cell
-	- Insert Row (before/after) (Alt+I, R) -- perhaps we can use Alt+I, Shift+R for insert Row After
-	- Insert Column (before/after) (Alt+I, C)
 	- Delete Row - Select row... Delete
 	- Delete Column - Select column... Delete
 	- Delete Table
 	- Merge/Unmerge cells (optional)
 	- Selection in single table context check
-	- Tab for move to next cell (select content of next cell)
 
 	- Shift+Space = select row
 	- Ctrl+Space = select column

@@ -19,6 +19,12 @@ var Region = Slate.Region;
 
 var doc = '(doc (section ' +
 	'(p "") ' + //empty paragraph at start for testing
+	'(table '+
+		'(row (cell "ABC") (cell "Header2") (cell "Header3")) ' +
+		'(row (cell "A cell") (cell "99") (cell "100")) ' +
+		'(row (cell "AB cell") (cell "B99") (cell "100")) ' +
+		'(row (cell "AC cell") (cell "C99") (cell "100")) ' +
+	') ' + //end table
 	'(h1 "Welcome to SlateJS") ' +
 	'(p "Welcome to your editor.") ' + 
 	'(p [[76,{}],[2,{"sub":true}],[24,{}],[2,{"sup":true}],[76,{}],[16,{"href":"http://google.co.uk"}],[177,{}]]"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Corrupti, aliquid ex necessitatibus repellatTM a illo fuga dolore aperiam totam tempore nisi neque delectus labore, nihil quae dignissimos dolores mollitia? Vel sunt neque voluptatibus excepturi laboriosam possimus adipisci quidem dolores, omnis nemo dolore eligendi blanditiis, voluptatem in doloribus hic aperiam.") ' + 
