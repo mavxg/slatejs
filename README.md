@@ -20,15 +20,48 @@ npm test -- run tests
 * [ ] Minimal selection update check
 * [X] Keyboard shortcut system *** 
 * [ ] Table editor actions
+	(in google docs these only happen on the last table selected when multiple tables are selected.)
+	- Insert table (2x default)
+		- Selection into first cell
+	- Insert Row (before/after) (Alt+I, R) -- perhaps we can use Alt+I, Shift+R for insert Row After
+	- Insert Column (before/after) (Alt+I, C)
+	- Delete Row - Select row... Delete
+	- Delete Column - Select column... Delete
+	- Delete Table
+	- Merge/Unmerge cells (optional)
+	- Selection in single table context check
+	- Tab for move to next cell (select content of next cell)
+
+	- Shift+Space = select row
+	- Ctrl+Space = select column
+
+	- Ctrl+y = redo last action (can also be used to repeat if the redo buffer is empty)
+
+	- Ctrl+Shift+% = apply percentage format
+	- Ctrl+Shift+# = apply date format
+
 * [ ] Hookup Qube
+	- Parse code and tables.
+	- Insert results.
+	- Insert global errors/messages
+	- Cache result ops.
 * [ ] Render out of date code (i.e. not yet calculated)
 * [ ] Copy/Cut (inc table)
+	- What does excel do about non rectangular selections
+		and cut and paste? Does it merge them? Can only copy selections
+		in a table if they line up (same start row and end row or same
+		start column and end column). Just get an error if you try to
+		copy something that doesn't line up.
 * [ ] Paste (inc table)
 * [X] Scroll to cursor
 * [X] Movement commands
 * [X] Delete commands
 * [ ] Attribute on paragraphs (??? how should it deal with tables
 	  - attribute if in vs attribute only if fully selected.)
+	  - Tables are shown fully selected so just attribute all the heads
+	  - could have an allowable attributes on the symbol
+	  	to avoid attributing things like a result with something that it
+	  	cannot have.
 
 * [ ] discard nop in livedb caused by _apply exception returning same doc.
 
@@ -51,6 +84,8 @@ You should even be able to put something down the side to varie it over ...
 
 
 ## Bugs
+
+* Kerning changes when cursor is between kerned pairs. (Google docs solves this by not kerning text.)
 
 * List items should nest inside other items not at the list level..
 
