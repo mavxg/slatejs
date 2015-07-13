@@ -21,9 +21,7 @@ npm test -- run tests
 * [X] Keyboard shortcut system *** 
 * [ ] Table editor actions
 	(in google docs these only happen on the last table selected when multiple tables are selected.)
-	- Delete Row - Select row... Delete
-	- Delete Column - Select column... Delete
-	- Delete Table
+
 	- Merge/Unmerge cells (optional)
 	- Selection in single table context check
 
@@ -80,6 +78,10 @@ You should even be able to put something down the side to varie it over ...
 
 ## Bugs
 
+* Delete table elements not undoable
+
+* Delete key at start of row causes row join
+
 * Kerning changes when cursor is between kerned pairs. (Google docs solves this by not kerning text.)
 
 * List items should nest inside other items not at the list level..
@@ -87,7 +89,7 @@ You should even be able to put something down the side to varie it over ...
 * Selection transform bug when overtyping with mulitple selections.
 
 * line up doesn't work from after a freshly created section break.
-   or TO or FROM a new line
+   or TO or FROM a new line *** IMPORTANT
 
 * cannot delete a boundary over list items (with double indent) or tables. (Note, should delete whole table.)
 
