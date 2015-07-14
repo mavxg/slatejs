@@ -19,20 +19,13 @@ npm test -- run tests
 * [X] Multiple selection
 * [ ] Minimal selection update check
 * [X] Keyboard shortcut system *** 
-* [ ] Table editor actions
-	(in google docs these only happen on the last table selected when multiple tables are selected.)
-
+* [E] Table editor actions
 	- Merge/Unmerge cells (optional)
 	- Selection in single table context check
-
 	- Shift+Space = select row
 	- Ctrl+Space = select column
-
-	- Ctrl+y = redo last action (can also be used to repeat if the redo buffer is empty)
-
 	- Ctrl+Shift+% = apply percentage format
 	- Ctrl+Shift+# = apply date format
-
 * [ ] Hookup Qube
 	- Parse code and tables.
 	- Insert results.
@@ -45,6 +38,7 @@ npm test -- run tests
 		in a table if they line up (same start row and end row or same
 		start column and end column). Just get an error if you try to
 		copy something that doesn't line up.
+	- Ctrl+y = redo last action (can also be used to repeat if the redo buffer is empty)
 * [ ] Paste (inc table)
 * [X] Scroll to cursor
 * [X] Movement commands
