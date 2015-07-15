@@ -28,7 +28,8 @@ npm test -- run tests
 	- Ctrl+Shift+# = apply date format
 * [ ] Hookup Qube
 	- Parse code and tables.
-	- Insert results.
+	- Insert results. *** Merge existing results
+	- Table results
 	- Insert global errors/messages
 	- Cache result ops.
 * [ ] Render out of date code (i.e. not yet calculated)
