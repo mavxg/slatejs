@@ -42,8 +42,9 @@
   "dependencies": {
     "dummy-sharejs-connection": "git://github.com/mavxg/dummy-sharejs-connection",
     "friar": "git://github.com/mavxg/friar",
+    "ot-sexpr": "git://github.com/mavxg/ot-sexpr",
+    "qube": "mavxg/qube",
     "share": "^0.7.17",
-    "undomanager": "git://github.com/mavxg/undomanager",
-    "ot-sexpr": "git://github.com/mavxg/ot-sexpr"
+    "undomanager": "git://github.com/mavxg/undomanager"
   }
 }

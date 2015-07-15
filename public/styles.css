@@ -19,6 +19,14 @@ div.content {
 	max-width: 700px;
 }
 
+div.result {
+	padding: 1px 15px;
+	margin-top: 25px;
+	margin-bottom: 25px
+	box-sizing: border-box;
+	background: rgb(113, 179, 253);
+}
+
 section hr {
 	display: block;
 	width: 100px;

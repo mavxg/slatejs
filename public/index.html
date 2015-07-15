@@ -19,11 +19,11 @@ var Region = Slate.Region;
 
 var doc = '(doc (section ' +
 	'(p "") ' + //empty paragraph at start for testing
-	'(table '+
-		'(row (cell "ABC") (cell "Header2") (cell "Header3")) ' +
-		'(row (cell "A cell") (cell "99") (cell "100")) ' +
-		'(row (cell "AB cell") (cell "B99") (cell "100")) ' +
-		'(row (cell "AC cell") (cell "C99") (cell "100")) ' +
+	'{"headerRows":1}(table '+
+		'(row (cell "Cat[]=") (cell "Qube[]") (cell "Other[]")) ' +
+		'(row (cell "First") (cell "99") (cell "100")) ' +
+		'(row (cell "Second") (cell "199") (cell "200")) ' +
+		'(row (cell "Third") (cell "299") (cell "300")) ' +
 	') ' + //end table
 	'(h1 "Welcome to SlateJS") ' +
 	'(p "Welcome to your editor.") ' + 
@@ -41,13 +41,15 @@ var doc = '(doc (section ' +
 		'(row (cell [[29,{}],[28,{"strong":true}],[17,{"strong":true,"em":true}],[20,{"em":true}]]"Text this is not bold before Some bold text to go in the bold italic cell. and not bold after.")) ' +
 		'(row {"colSpan":2}(cell [[29,{}],[28,{"strong":true}],[17,{"strong":true,"em":true}],[20,{"em":true}]]"Text this is not bold before Some bold text to go in the bold italic cell. and not bold after.")) ' +
 	') ' + //end table
-
 	'(p "") ' + //paragraph we need at the end of a section
 	') (section ' +
 	'(h1 "Another Section") ' +
 	'(p "Another paragraph in a another section") ' +
-	'(code "This is some code") ' +
-	'(code "This is more code") ' +
+	'(code "Another = Qube * Other + 5") ' +
+	'(code "Extra[Cat=First] = 77") ' +
+	'(code "Extra = 88") ' +
+	'(code "Another[Cat=First]") ' +
+	'(code "Qube[Cat=First]") ' +
 	'(ulli "First list item") ' +
 	'{"indent":2}(ulli "First sub list item") ' +
 	'{"indent":3}(ulli "First sub sub list item") ' +
@@ -67,6 +69,7 @@ var doc = '(doc (section ' +
 		'(row (cell [[29,{}],[28,{"strong":true}],[17,{"strong":true,"em":true}],[20,{"em":true}]]"Text this is not bold before Some bold text to go in the bold italic cell. and not bold after.")) ' +
 		'(row {"colSpan":2}(cell [[29,{}],[28,{"strong":true}],[17,{"strong":true,"em":true}],[20,{"em":true}]]"Text this is not bold before Some bold text to go in the bold italic cell. and not bold after.")) ' +
 	') ' + //end table
+	'(result (p "paragraph in a result"))' +
 	'(p "") ' + //empty paragraph we need at the end.
 	'))'
 
@@ -92,11 +95,28 @@ sharedoc.whenReady(function() {
 	store = new Slate.Store(sharedoc);
 
 	store.select(sel);
-	editor = e.Editor({store: store, plugins:[plugins.base, plugins.table]});
+	editor = e.Editor({store: store, plugins:[plugins.base, plugins.table, plugins.qube]});
 
 	e.friar.renderComponent(editor, preview);
 });
 //var tf = new e.Document({obj: doc});
+
+function q() {
+	var qube = new Qube.Qube(Qube.prelude);
+	function s(x) { return Qube.parse(Qube.lex(x)); }
+	//qube.exprs(s('Namespace(X, B[] = {1,2,3},C[] = {3,4,5},D = Sum(Map((a) -> a + 1, C[C])))'));
+	var subspace = ['Namespace', null];
+	Array.prototype.push.apply(subspace, s('B[] = {1,2,3}\nC[] = {3,4,5}\nD = Sum(Map((a) -> a + 1, C[C]))'));
+	subspace = ['Set', ['Symbol', 'X'], subspace];
+	qube.expr(subspace);
+	qube.exprs(s('A = X.B * X.C'));
+	qube.exprs(editor.document().qube_expressions());
+	qube.build();
+	Qube.Qube.prototype.meval = function(str) {
+		return this.eval(s(str)[0]);
+	};
+	return qube;
+}
 
 </script>
 </body>
