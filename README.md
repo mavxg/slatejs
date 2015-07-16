@@ -10,6 +10,11 @@ npm test -- run tests
 
 ## TODO
 
+***
+
+* [ ] FIX: Can only insert character in string bug
+* [ ] Show errors
+
 * [X] S-Expression document renderer
 * [X] Inline selection renderer
 * [X] FIX: Selection off by one error
@@ -27,9 +32,8 @@ npm test -- run tests
 	- Ctrl+Shift+% = apply percentage format
 	- Ctrl+Shift+# = apply date format
 * [ ] Hookup Qube
-	- Parse code and tables.
 	- Insert results. *** Merge existing results
-	- Table results
+	- Table results ****
 	- Insert global errors/messages
 	- Cache result ops.
 * [ ] Render out of date code (i.e. not yet calculated)

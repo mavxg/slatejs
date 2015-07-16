@@ -23,6 +23,9 @@ div.result pre {
 	background: rgb(113, 179, 253);
 }
 
+div.result pre.error {
+	background: rgb(253, 63, 56);
+}
 section hr {
 	display: block;
 	width: 100px;
