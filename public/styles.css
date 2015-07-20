@@ -24,8 +24,32 @@ div.result pre {
 }
 
 div.result pre.error {
-	background: rgb(253, 63, 56);
+	background: rgb(253, 116, 111);
 }
+
+td.error {
+	background: rgb(253, 116, 111);
+}
+
+div.result td.category {
+	background-color: rgb(216,230,242);
+}
+div.result th.category {
+	background-color: rgb(134,192,241);
+}
+
+td.output {
+	background-color: rgb(216,230,242);
+}
+
+td.highlight {
+	background-color: rgb(255,250,229);
+}
+th.highlight {
+	background-color: rgb(255,234,133);
+}
+
+
 section hr {
 	display: block;
 	width: 100px;

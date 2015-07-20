@@ -10,11 +10,6 @@ npm test -- run tests
 
 ## TODO
 
-***
-
-* [ ] FIX: Can only insert character in string bug
-* [ ] Show errors
-
 * [X] S-Expression document renderer
 * [X] Inline selection renderer
 * [X] FIX: Selection off by one error
@@ -76,8 +71,6 @@ You should even be able to put something down the side to varie it over ...
 
 
 ## Bugs
-
-* Delete table elements not undoable
 
 * Delete key at start of row causes row join
 
