@@ -20,10 +20,10 @@ var Region = Slate.Region;
 var doc = '(doc (section ' +
 	'(p "") ' + //empty paragraph at start for testing
 	'{"headerRows":1}(table '+
-		'(row (cell "Cat[]=") (cell "Qube[]") (cell "Other[]")) ' +
-		'(row (cell "First") (cell "99") (cell "100")) ' +
-		'(row (cell "Second") (cell "199") (cell "200")) ' +
-		'(row (cell "Third") (cell "299") (cell "300")) ' +
+		'(row (cell "Cat[]=") (cell "Qube[]") (cell "Other[]") (cell "`Extra")) ' +
+		'(row (cell "First") (cell "99") (cell "100") (cell)) ' +
+		'(row (cell "Second") (cell "199") (cell "200") (cell)) ' +
+		'(row (cell "Third") (cell "299") (cell "300") (cell)) ' +
 	') ' + //end table
 	'(h1 "Welcome to SlateJS") ' +
 	'(p "Welcome to your editor.") ' + 

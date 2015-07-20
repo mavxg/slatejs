@@ -27,7 +27,7 @@ div.result pre.error {
 	background: rgb(253, 116, 111);
 }
 
-td.error {
+td.error, th.error {
 	background: rgb(253, 116, 111);
 }
 
