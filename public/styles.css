@@ -19,6 +19,11 @@ div.content {
 	max-width: 700px;
 }
 
+div.result {
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+
 div.result pre {
 	background: rgb(113, 179, 253);
 }
