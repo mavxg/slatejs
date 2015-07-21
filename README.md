@@ -77,6 +77,10 @@ You should even be able to put something down the side to varie it over ...
 
 This assumes that you are mostly sparse. It would be a good way to store things in Qube also since most of the code would not need to care about the dependencies. Can also have 3 way/n way dependencies.
 
+### Prefix slice
+
+  [P]{A,B,C} === {A[P],B[P],C[P]}
+
 ## Bugs
 
 * Delete key at start of row causes row join
