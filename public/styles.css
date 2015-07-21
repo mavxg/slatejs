@@ -5,6 +5,10 @@ body {
 	font-size: 17px;
 }
 
+h1 {
+	font-size: 42px;
+}
+
 /* fix line height change due to sub/sup */
 sup, sub {
    vertical-align: baseline;
