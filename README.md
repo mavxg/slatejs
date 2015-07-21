@@ -69,6 +69,13 @@ You should even be able to put something down the side to varie it over ...
 * IDEA: lens/scratch sidebar. Show calculations pulled out to the side and how they change
   when you change the model.
 
+### Dependent dimensions
+
+  dimensions: [{name:A, items:[...]},{name:B, items:[...]},{name:C, items:[...]}],
+  dependencies: [{dimensions:[A,B], tuples:[[a_i,b_i],...]}],
+  values: [...], //length = dim(C) * length of tuples in dependencies
+
+This assumes that you are mostly sparse. It would be a good way to store things in Qube also since most of the code would not need to care about the dependencies. Can also have 3 way/n way dependencies.
 
 ## Bugs
 
