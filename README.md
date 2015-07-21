@@ -17,7 +17,7 @@ npm test -- run tests
 * [X] FIX: Selection unstable under selection spans
 * [X] FIX: Selection fails in code
 * [X] Multiple selection
-* [ ] Minimal selection update check
+* [X] Minimal selection update check
 * [X] Keyboard shortcut system *** 
 * [E] Table editor actions
 	- Merge/Unmerge cells (optional)
@@ -26,9 +26,7 @@ npm test -- run tests
 	- Ctrl+Space = select column
 	- Ctrl+Shift+% = apply percentage format
 	- Ctrl+Shift+# = apply date format
-* [ ] Hookup Qube
-	- Insert results. *** Merge existing results
-	- Table results ****
+* [E] Hookup Qube
 	- Insert global errors/messages
 	- Cache result ops.
 * [ ] Render out of date code (i.e. not yet calculated)
@@ -57,12 +55,16 @@ npm test -- run tests
       and missing opens by inserting before your insert. (or just collapse the
       selection like Google Docs)
 
-# IDEA
 
-QUBE integration. Have an output table format that is a table where the expressions
-you type get evaluated and you get an output. If it varies over multiple dimensions then they become pivot slices. This is then an output table that is formatted like an input table. Entered like a table but evaluates like a pivot table output.
+# Encryption
 
-You should even be able to put something down the side to varie it over ...
+Add encrypted section. Generates key which it uses to encrypt the section and then encrypts that with your password based key.
+
+Where should we store the keys? Document object.
+
+(encrypted (key "salt" "vhash", "encrypted key") ... encrypted data ...)
+
+# IDEAS
 
 (probably need columns --- before the rows in a table)
 
