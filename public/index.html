@@ -19,6 +19,7 @@ var Region = Slate.Region;
 
 var doc = '(doc (section ' +
 	'(p "") ' + //empty paragraph at start for testing
+	'(encrypted (keys {} {}) (p "test encrypted renderer"))' +
 	'{"headerRows":1}(table '+
 		'(row (cell "Cat[]=") (cell "Qube[]") (cell "Other[]") (cell "`Extra")) ' +
 		'(row (cell "First") (cell "99") (cell "100") (cell)) ' +
