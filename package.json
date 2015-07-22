@@ -42,6 +42,7 @@
   "dependencies": {
     "dummy-sharejs-connection": "git://github.com/mavxg/dummy-sharejs-connection",
     "friar": "git://github.com/mavxg/friar",
+    "openpgp": "^1.2.0",
     "ot-sexpr": "git://github.com/mavxg/ot-sexpr",
     "qube": "mavxg/qube",
     "share": "^0.7.17",

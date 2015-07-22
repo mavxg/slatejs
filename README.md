@@ -55,14 +55,17 @@ npm test -- run tests
       and missing opens by inserting before your insert. (or just collapse the
       selection like Google Docs)
 
-
 # Encryption
 
 Add encrypted section. Generates key which it uses to encrypt the section and then encrypts that with your password based key.
 
-Where should we store the keys? Document object.
+Where should we store the keys? Document object. Server sid
 
-(encrypted (key "salt" "vhash", "encrypted key") ... encrypted data ...)
+  (encrypted (key "salt" "vhash", "encrypted key") ... encrypted data ...)
+
+  (encrypted (keys {pubid:..., key:encrypted key}) (encd nonce ... encrypted ops ...) (encd nonce ) ...)
+
+  server side we store a users public key and encrypted private key (which we only share with them) ... this way we can separate this out...
 
 # IDEAS
 
@@ -80,6 +83,8 @@ Where should we store the keys? Document object.
 This assumes that you are mostly sparse. It would be a good way to store things in Qube also since most of the code would not need to care about the dependencies. Can also have 3 way/n way dependencies.
 
 ### Prefix slice
+
+  //map((a) -> a[P], {A,B,C}) -- provided [P] doesn't change dimensions.
 
   [P]{A,B,C} === {A[P],B[P],C[P]}
 
