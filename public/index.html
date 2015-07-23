@@ -22,15 +22,17 @@ var Region = Slate.Region;
 
 var doc = '(doc (section ' +
 	'(p "") ' + //empty paragraph at start for testing
-	') (encrypted (keys {} {}) (p "test encrypted renderer")) (section ' +
+	') (encrypted (keys {}) (p "test encrypted renderer")) (section ' +
 	'{"headerRows":1}(table '+
 		'(row (cell "Cat[]=") (cell "Qube[]") (cell "Other[]") (cell "`Extra")) ' +
 		'(row (cell "First") (cell "99") (cell "100") (cell)) ' +
 		'(row (cell "Second") (cell "199") (cell "200") (cell)) ' +
 		'(row (cell "Third") (cell "299") (cell "300") (cell)) ' +
 	') ' + //end table
+	') (encrypt (keys {}) (p "test encrypt renderer") (code "Test")) (section ' +
 	'(h1 "Welcome to SlateJS") ' +
 	'(p "Welcome to your editor.") ' + 
+	') (encrypted) (section ' + //new empty encrypted region for testing.
 	'(p [[76,{}],[2,{"sub":true}],[24,{}],[2,{"sup":true}],[76,{}],[16,{"href":"http://google.co.uk"}],[177,{}]]"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Corrupti, aliquid ex necessitatibus repellatTM a illo fuga dolore aperiam totam tempore nisi neque delectus labore, nihil quae dignissimos dolores mollitia? Vel sunt neque voluptatibus excepturi laboriosam possimus adipisci quidem dolores, omnis nemo dolore eligendi blanditiis, voluptatem in doloribus hic aperiam.") ' + 
 	'{"alignments":["left","right"]}(table '+
 		'(row (cell "Some text to go in the cell") (cell "Header2")) ' +

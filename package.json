@@ -46,6 +46,7 @@
     "ot-sexpr": "git://github.com/mavxg/ot-sexpr",
     "qube": "mavxg/qube",
     "share": "^0.7.17",
-    "undomanager": "git://github.com/mavxg/undomanager"
+    "undomanager": "git://github.com/mavxg/undomanager",
+    "zlibjs": "^0.2.0"
   }
 }
