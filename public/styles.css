@@ -9,6 +9,11 @@ h1 {
 	font-size: 42px;
 }
 
+h1,h2,h3,h4,h5,h6 {
+	font-family: Raleway, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	color: rgb(75, 75, 75);
+}
+
 /* fix line height change due to sub/sup */
 sup, sub {
    vertical-align: baseline;
@@ -18,9 +23,30 @@ sup, sub {
 sub { top: 0.4em; }
 
 
-div.content {
+.content {
 	margin: auto;
 	max-width: 700px;
+}
+
+
+  .icon {
+    display: inline-block;
+    position: absolute;
+    margin: 15px;
+    width: 16px;
+    height: 16px;
+    fill: rgb(175, 175, 175);
+  }
+
+div.encrypted {
+background: rgb(250, 250, 250);
+margin: 2em auto;
+border-top: 1px solid #ddd;
+border-bottom: 1px solid #ddd;
+}
+
+.pure-form {
+	margin-bottom: 1em;
 }
 
 div.result {
