@@ -22,6 +22,10 @@ sup, sub {
 }
 sub { top: 0.4em; }
 
+.shareForm {
+	padding-bottom: 1em;
+	border-bottom: 1px solid #ddd;
+}
 
 .content {
 	margin: auto;
@@ -29,19 +33,23 @@ sub { top: 0.4em; }
 }
 
 
-  .icon {
-    display: inline-block;
+.icon_link {
+	display: block;
     position: absolute;
     margin: 15px;
+}
+
+  .icon {
+    display: inline-block;
     width: 16px;
     height: 16px;
     fill: rgb(175, 175, 175);
   }
 
 div.encrypted {
+	display: relative;
 background: rgb(250, 250, 250);
-margin: 2em auto;
-margin-bottom: 4em;
+margin: 3em auto;
 border-top: 1px solid #ddd;
 border-bottom: 1px solid #ddd;
 }

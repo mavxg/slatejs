@@ -20,16 +20,68 @@ var e = Slate.editor;
 var Selection = Slate.Selection;
 var Region = Slate.Region;
 
+var enckey = ('-----BEGIN PGP MESSAGE-----\n' +
+'Version: OpenPGP.js VERSION\n' +
+'Comment: http://openpgpjs.org\n' +
+'\n' +
+'wcBMAwGEQSpi3+o9AQf+IMKqC9amID2zsz3I/XTcHjKY7En5NDZ6tMsJ2vwZ\n' +
+'XkKPD9fXq66l2Y93CMFDHEajvU5/acAnmmpjwOWTzNYBWDxNR6brh4G4rOAn\n' +
+'ejpiO/94fA6qEGX/nL+fPxESYAQgJgiYsAggZvankClEUdp6MxUbIrgVrX0m\n' +
+'h950P0Eo/eG2Puu3zSi9g+D0H98iTQCzIdbzLwMCicb2EtXpLn62UUDNVUwt\n' +
+'natk7xci97QvfKjGOI4MV19x+UsuIenmfDS9vtVFFcJSX6U3ujUTWYq716C+\n' +
+'0t2OmbEGnl8ZN7b1ChtRyi4eNYG4jsgos+w5Tx4AdeQg8RFxsvRv6Qo1FiXk\n' +
+'SNJkAdxrOWQDku1FBFQKOQCmFDKqhVXz7wXA3JAt9CAt7DG1Tk0tXfouwCAo\n' +
+'kxFKsygSP5dBCE2r6T8OXFVo20aZQeycvUWIpnH5IoWRX2z4kMmqzv9fySW9\n' +
+'VDYUC3Cl/bVjlrKyuQ==\n' +
+'=jymK\n' +
+'-----END PGP MESSAGE-----\n').replace(/\n/g,'\\n');
+console.log(enckey);
+var pubkey_id = 'fd9f5a23f6c7fe09';
+var pubkey = ('-----BEGIN PGP PUBLIC KEY BLOCK-----\n' +
+'Version: OpenPGP.js VERSION\n' +
+'Comment: http://openpgpjs.org\n' +
+'\n' +
+'xsBNBFWvl5ABCAC/oD5kPdl8cclqOt08P4OG6A663uTi2U0txEF0swYCsJGV\n' +
+'Ldymx6M1uJLAf7+gJz8/jYRC66E3lhIWcWHl0KAUknFZ3gvaEz5XKm/RFsDs\n' +
+'qMUMXu4TClw4o5P8JD7tScqhj/fHiwca4bflGjIZhcrXsxKmzQ4hILaZIPBB\n' +
+'UTKdii0fxmB9n0V+HmakbVoHzQUGSyvsdqd3y+El9OhN+crnGrZ8PyP053BC\n' +
+'eaScNtq5pxVWhOro5+prgz1ijLP6/PkEP3Rby/11XVJPOb5OQenfl/HUQDwM\n' +
+'uVSk4oxhxOjnhlqeeNhi8/PrYLJwL2fZTITVe6+1clS6VZ2NtZmmd6hpABEB\n' +
+'AAHNP0JlbmphbWluIE5vcnJpbmd0b24gKFRlc3Qga2V5IGZvciBzbGF0ZWpz\n' +
+'KSA8YmVuQG5vcnJpbmd0b24ubmV0PsLAeAQTAQIAIgUCVa+XkAIbAwYLCQgH\n' +
+'AwIGFQgCCQoLBBYCAwECHgECF4AACgkQ/Z9aI/bH/gn38gf/QQmKXwcYzlnH\n' +
+'NkOFyHaSfm/7jtneyAMPyB1xUdS5rJUbeCcoeRGSVVJP48pkKinPVwqjHiC9\n' +
+'hJhazUOb/OUlEnF65srLU9Ta91yLPaelezZdywOGZXFvkv5f7cSKUzTDXFaw\n' +
+'IL0OJZ/sk1pKSZyA4y/84yDW4oe6IzKKd5JBk7gJWsBJmeAPWm9FroZa+agP\n' +
+'zv+l/dVu9d7143S+mrhM4x6eydoBoI5Dmx4VkSjl1fdmjY+d8VrP6strcdJh\n' +
+'Cs3ejcwPvJV0X47vQsrvyOJT6/2sk/a7J0q0MmW2nk85yXaE0ZULlmwFvUvb\n' +
+'dYktob9Ox3h0SoifaiTvNuUSlc0xJs7ATQRVr5eQAQgAunFiJEyWjbN2i7i5\n' +
+'dQScmcue3AqhuTk1SfjJ1G1OJYFK4w0tYmBWoQbRKvuPNv4L/pgy1Xv6PUJE\n' +
+'qO9lFILQvA1o0enSB9serhumH3LV6eTin/gSlExpLxixdOjleUrYiUj6Ewxv\n' +
+'TCdB0qAYK+5dGzVHK3D1Kmyux7w3QzRxcZB/N6bwsFKL/fm4h3cBsXTwRKSJ\n' +
+'AY/ssTPjjDumew/8q2jpsZUOK28ldgMYzIdtP+T/ST/J3sjU2MSXqv4om8zU\n' +
+'+2GezCVpPrMH2RB7E7W84B2oONslT2RIwa89E5XNqNptTXj7OQbQW68jEvTf\n' +
+'TqISBMRyrDUjbcuz3Vlnt9nI0QARAQABwsBeBBgBAgAJBQJVr5eQAhsMAAoJ\n' +
+'EP2fWiP2x/4J+0EH+Pp2tJcBNEdcCt8/pPCGfvntH9uEE5b6czTYSZ/FoK2w\n' +
+'VdcMDysX0YpNCvtlI6HMhRVRuVVFw/C6WBNXgcxJwC4lJhRRsSRW/QcTwXgY\n' +
+'lOTlhhUJVOeZlI6Tzh7dDPWhp0lsDqa24FGv49KGYm0uJnV0k6VdyKOZWlQD\n' +
+'0HhuIeHMAZLb+FOpGCTJhGSpud1lcQYNS/UzzPRFOKxKpr+nk5hX4NPDjjUq\n' +
+'ELEAFqJ3PYpI1/8pihjTZ93TcOl5aFj10qfGHUW8x6LsguOZEgEEna147/IK\n' +
+'/ubot/ZJ6uvsJJtxEtf7cbKHbUp5r6/THKd51GYHFbBgjN3+Vs7dbwIWng==\n' +
+'=37zK\n' +
+'-----END PGP PUBLIC KEY BLOCK-----\n').replace(/\n/g,'\\n');
+
+
 var doc = '(doc (section ' +
 	'(p "") ' + //empty paragraph at start for testing
-	') (encrypted (keys {}) (p "test encrypted renderer")) (section ' +
+	') (encrypted (keys {"id":"'+pubkey_id+'","public":"'+pubkey+'","key":"'+enckey+'"})) (section ' +
 	'{"headerRows":1}(table '+
 		'(row (cell "Cat[]=") (cell "Qube[]") (cell "Other[]") (cell "`Extra")) ' +
 		'(row (cell "First") (cell "99") (cell "100") (cell)) ' +
 		'(row (cell "Second") (cell "199") (cell "200") (cell)) ' +
 		'(row (cell "Third") (cell "299") (cell "300") (cell)) ' +
 	') ' + //end table
-	') (encrypt (keys {}) (p "test encrypt renderer") (code "Test")) (section ' +
+	') (encrypt (keys {"id":"'+pubkey_id+'","public":"'+pubkey+'","key":"'+enckey+'"}) (p "test encrypt renderer") (code "Test")) (section ' +
 	'(h1 "Welcome to SlateJS") ' +
 	'(p "Welcome to your editor.") ' + 
 	') (encrypted) (section ' + //new empty encrypted region for testing.
