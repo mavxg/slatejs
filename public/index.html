@@ -74,14 +74,14 @@ var pubkey = ('-----BEGIN PGP PUBLIC KEY BLOCK-----\n' +
 
 var doc = '(doc (section ' +
 	'(p "") ' + //empty paragraph at start for testing
-	') (encrypted (keys {"id":"'+pubkey_id+'","public":"'+pubkey+'","key":"'+enckey+'"}) (ops) (p "test decrypt renderer")) (section ' +
+	') (encrypted (keys {"id":"'+pubkey_id+'","public":"'+pubkey+'","key":"'+enckey+'"}) (ops {"op":"(1yp`21ctest decrypt renderer\')(4ycode`4cTest\')"})) (section ' +
 	'{"headerRows":1}(table '+
 		'(row (cell "Cat[]=") (cell "Qube[]") (cell "Other[]") (cell "`Extra")) ' +
 		'(row (cell "First") (cell "99") (cell "100") (cell)) ' +
 		'(row (cell "Second") (cell "199") (cell "200") (cell)) ' +
 		'(row (cell "Third") (cell "299") (cell "300") (cell)) ' +
 	') ' + //end table
-	') (encrypt (keys {"id":"'+pubkey_id+'","public":"'+pubkey+'","key":"'+enckey+'"}) (ops) (p "test encrypt renderer") (code "Test")) (section ' +
+	') (encrypted (keys {"id":"'+pubkey_id+'","public":"'+pubkey+'","key":"'+enckey+'"}) (ops {"op":"(1yp`21ctest encrypt renderer\')(4ycode`4cTest\')"})) (section ' +
 	'(h1 "Welcome to SlateJS") ' +
 	'(p "Welcome to your editor.") ' + 
 	') (encrypted) (section ' + //new empty encrypted region for testing.
