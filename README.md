@@ -90,6 +90,8 @@ This assumes that you are mostly sparse. It would be a good way to store things 
 
 ## Bugs
 
+* multiple retains in a row causes stack underflow in _apply
+
 * Delete key at start of row causes row join
 
 * Kerning changes when cursor is between kerned pairs. (Google docs solves this by not kerning text.)
