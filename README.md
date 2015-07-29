@@ -90,7 +90,9 @@ This assumes that you are mostly sparse. It would be a good way to store things 
 
 ## Bugs
 
-* multiple retains in a row causes stack underflow in _apply
+* Encryption squash breaks syncronisation (looks like the bug is in EncrypedContext.proto._onOp)
+
+* x(space) breaks in encryption (e.g. *<space> to list item)
 
 * Delete key at start of row causes row join
 
