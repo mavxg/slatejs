@@ -97,7 +97,7 @@ var plugins = Slate.plugins;
 
 sharedoc.whenReady(function() {
 	if (!sharedoc.type) sharedoc.create('sexpr', doc);
-	store = new Slate.Store(sharedoc.createContext());
+	store = new Slate.Store(sharedoc.createContext(), Slate.type);
 
 	store.select(sel);
 	editor = e.Editor({store: store, plugins:[plugins.base, plugins.table, plugins.qube, plugins.encryption]});
