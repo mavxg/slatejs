@@ -10,6 +10,27 @@ npm test -- run tests
 
 ## TODO
 
+### New
+
+Note, some of these are probably on Qubic not SlateJS
+
+* [ ] Qubic Front Page
+* [ ] Table Paste
+* [ ] File Embed
+* [ ] Cache result diff (don't send every recalc to server)
+* [ ] Cache can vary over category(s)
+* [ ] History Page
+* [ ] Fix cursor for encrypted region
+* [ ] Check if caching bug fixed (inline code math test - press recalc)
+
+### Nice to have
+
+* [ ] Async outstanding (probably in Qube)
+* [ ] @ format system (probably in Qube)
+* [ ] Charts (=Series(label, axis, values))
+
+### Old
+
 * [X] S-Expression document renderer
 * [X] Inline selection renderer
 * [X] FIX: Selection off by one error
