@@ -100,7 +100,7 @@ sharedoc.whenReady(function() {
 	store = new Slate.Store(sharedoc.createContext(), Slate.type);
 
 	store.select(sel);
-	editor = e.Editor({store: store, plugins:[plugins.base, plugins.table, plugins.qube, plugins.encryption]});
+	editor = e.Editor({store: store, plugins:[plugins.base, plugins.table, plugins.qube, plugins.encryption, plugins.file]});
 
 	e.friar.renderComponent(editor, preview);
 });
