@@ -21,12 +21,6 @@ function commands(editor) {
 		return ops;
 	}
 	
-	function undo() { editor.undo(); }
-	undo.description = function() { return "Undo previous action."; };
-
-	function redo() { editor.redo(); }
-	redo.description = function() { return "Redo previous undo."; };
-
 	function format(args) {
 		var type = args.type;
 		var selection = editor.selection();
@@ -343,8 +337,6 @@ function commands(editor) {
 	paste.description = function() { return "Paste content into current selection."; }
 
 	return {
-		undo: undo,
-		redo: redo,
 		format: format,
 		link: link,
 		style: style,
@@ -379,11 +371,6 @@ var keymap = [
 	{keys:["cmd+."], command:"format", args:{type:"sup"}},
 	{keys:["cmd+u"], command:"format", args:{type:"underline"}},
 	{keys:["ctrl+`"], command:"format", args:{type:"code"}},
-
-	{keys:["ctrl+z"], command:"undo"},
-	{keys:["cmd+z"], command:"undo"},
-	{keys:["ctrl+shift+z"], command:"redo"},
-	{keys:["cmd+y"], command:"redo"},
 
 	{keys:["ctrl+]"], command:"indent"},
 	{keys:["ctrl+["], command:"unindent"},

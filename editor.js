@@ -5,6 +5,7 @@ var render = require('./render');
 var Preview = render.Preview;
 
 var ottype = require('ot-sexpr');
+var ot = ottype;
 
 var friar = require('friar');
 var Region = ottype.Region;
@@ -38,8 +39,6 @@ var TEXT_CONTENT = {
 var VALID_DOC = {
 	'doc': {
 		'section':true,
-		'encrypted':true,
-		'encrypt':true,
 		_fixup: function(children) { return [wrap('section',children)]; },
 		_level: 0,
 	},
@@ -67,46 +66,6 @@ var VALID_DOC = {
 			return [wrap('p', children)]; 
 		},
 		_level: 1,
-	},
-	'encrypt':{
-		'keys':true,
-		'ops':true,
-		'p':true,
-		'h1':true,
-		'h2':true,
-		'h3':true,
-		'h4':true,
-		'h5':true,
-		'h6':true,
-		'blockquote':true,
-		'pullquote':true,
-		'ulli':true,
-		'olli':true,
-		'table':true,
-		'code':true,
-		'result':true,
-		'file':true,
-		'import':true,
-		'include':true,
-		_fixup: function(children) {
-			//TODO: probably want to do something smarter here.
-			//if child is section then we unwrap.
-			return [wrap('p', children)]; 
-		},
-		_level: 1,
-	},
-	'encrypted': {
-		'keys':true,
-		'ops':true,
-		_fixup: function(children) { return []; },
-	},
-	'keys': {
-		'#obj':true,
-		_fixup: function(children) { return []; },
-	},
-	'ops': {
-		'#obj':true,
-		_fixup: function(children) { return []; },
 	},
 	'p':TEXT_CONTENT,
 	'h1':TEXT_CONTENT,
@@ -268,7 +227,7 @@ var VALID_DIV_CLASSNAMES = {
 };
 var IGNORE_DIV_CLASSNAMES = {
 	//'result':true, //paste results as unwrapped
-	'encrypted':true,
+	//'encrypted':true,
 };
 
 function elemToDoc(node, attribs, state) {
@@ -678,8 +637,6 @@ var Editor = createClass({
 		this.shouldCompose = false;
 		this.lastAction = null;
 
-		var store = this.props.store;
-
 		this.plugins = [];
 		if (this.props.plugins) {
 			var plugins = this.props.plugins;
@@ -688,10 +645,7 @@ var Editor = createClass({
 		}
 
 		return {
-			doc: store.document(),
-			selection: store.selection,
 			key_sequence: [], //stores the currently pressed key sequence
-			//zoom: 0, //TODO: allow zooming into a node and only displaying that.
 		};
 	},
 	readPlugin: function(_plugin) {
@@ -730,28 +684,8 @@ var Editor = createClass({
 
 		return plugin;
 	},
- 	loadPlugin: function(plugin) {
-		//add events
-		var store = this.props.store
-		for (var k in plugin) if (/^on/.test(k))
-			store.on(k.slice(2), plugin[k]);
-	},
-	unloadPlugin: function(plugin) {
-		//remove events
-		var store = this.props.store
-		for (var k in plugin) if (/^on/.test(k))
-			store.removeListener(k.slice(2), plugin[k]);
-	},
 	didMount: function() {
-		//register the
-		if (this.plugins) {
-			var plugins = this.plugins;
-			for (var i=0; i < plugins.length; i++)
-				this.loadPlugin(plugins[i]);
-		}
-
 		setTimeout(this.ensureFocus, 20);
-		this.props.store.on('change', this._onChange);
 		var ta = this.textarea.node;
 		var pa = this.hiddenPasteArea.node;
 		if (isIe) {
@@ -766,16 +700,8 @@ var Editor = createClass({
 		//setTimeout(this.updateCursors,0);
 	},
 	willUnmount: function() {
-
-		if (this.plugins) {
-			var plugins = this.plugins;
-			for (var i=0; i < plugins.length; i++)
-				this.unloadPlugin(plugins[i]);
-		}
-
 		this.focused = false;
 		var ta = this.textarea.node;
-		this.props.store.removeListener('change', this._onChange);
 		if (isIe) {
 			ta.removeEventListener('beforepaste', this.focusPasteDiv);
 			pa.removeEventListener('paste', this.handlePaste);
@@ -798,7 +724,8 @@ var Editor = createClass({
 		if (text.charAt(0) === "\u200B")
 			text = text.slice(1);
 		//find input diff
-		var i = 0; l = Math.min(prevInput.length, text.length);
+		var i = 0; 
+		var l = Math.min(prevInput.length, text.length);
 		while (i < l && prevInput.charCodeAt(i) === text.charCodeAt(i)) ++i;
 		var inserted = text.slice(i);
 		var offset = 0;
@@ -806,7 +733,7 @@ var Editor = createClass({
 			//delete some characters
 			offset = -(prevInput.length - i);
 		};
-		this.props.store.replaceText(null, offset, inserted, null, this.lastAction === 'typing');
+		this.replaceText(null, offset, inserted, null, this.lastAction === 'typing');
 		this.shouldCompose = true;
 		this.lastAction	= 'typing';
 
@@ -818,7 +745,7 @@ var Editor = createClass({
 	},
 	ensureFocus: function() {	
 		var ta = this.textarea.node;
-		if (this.state.selection.regions.every(function(r) { return r.empty(); })) {
+		if (this.props.selection.regions.every(function(r) { return r.empty(); })) {
 			//
 			ta.select();
 			ta.selectionStart = ta.selectionEnd;
@@ -842,8 +769,9 @@ var Editor = createClass({
 	},
 	context: function(key, region) {
 		var me = this;
+		var doc = this.props.document;
 		function parentNodeAt(head, point) {
-			var ns = me.state.doc.nodesAt(point);
+			var ns = doc.nodesAt(point);
 			for (var i=ns.length-1; i >= 0; i--) {
 				var n = ns[i];
 				if (n.type === 'list' && n.node.head().sym === head)
@@ -854,25 +782,25 @@ var Editor = createClass({
 
 		switch (key) {
 			case "head":
-				var n = this.state.doc.nodeAt(region.focus);
+				var n = doc.nodeAt(region.focus);
 				n = (n.type !== 'list') ? n.parent : n.node;
 				return n.head().sym;
 			case "preceding_text":
-				var n = this.state.doc.nodeAt(region.begin());
+				var n = doc.nodeAt(region.begin());
 				//TODO: check we have string
 				return n.node.str.slice(0,n.index);
 			case "following_text":
-				var n = this.state.doc.nodeAt(region.begin());
+				var n = doc.nodeAt(region.begin());
 				//TODO: check we have string
 				return n.node.str.slice(n.index);
 			case "surrounding_text":
-				var n = this.state.doc.nodeAt(region.begin());
+				var n = doc.nodeAt(region.begin());
 				//TODO: check we have string
 				return n.node.str;
 			case "selection_empty":
 				return region.empty();
 			case "breakable":
-				var n = this.state.doc.nodeAt(region.focus);
+				var n = doc.nodeAt(region.focus);
 				n = (n.type !== 'list') ? n.parent : n.node;
 				return !!n.head().breakable;
 			default:
@@ -893,7 +821,7 @@ var Editor = createClass({
 	_checkContexts: function(contexts) {
 		for (var i = 0; i < contexts.length; i++) {
 			var context = contexts[i];
-			var regions = this.state.selection.regions;
+			var regions = this.props.selection.regions;
 			if (!context.match_all)
 				regions = regions.slice(regions.length-1);
 			if (CONTEXT_REQUIRES_REGION[context.key] && regions.length === 0)
@@ -1089,7 +1017,7 @@ var Editor = createClass({
 		var x = v.clientX;
 		var y = v.clientY;
 		var elm = this.preview.node;
-		var doc = this.state.doc;
+		var doc = this.props.document;
 		var point = 0;
 		var m;
 		while (elm) {
@@ -1203,7 +1131,7 @@ var Editor = createClass({
 		console.log('editor: handleMouseDown')
 		if (e.target.nodeName === "A" && e.ctrlKey) return; //ctrl click link
 		if (e.ctrlKey || e.metaKey)
-			this.merge_selection = this.state.selection;
+			this.merge_selection = this.props.selection;
 		else
 			this.merge_selection = new Selection();
 		this.mouseDown = true;
@@ -1223,7 +1151,7 @@ var Editor = createClass({
 			r = this.moveTo(r,'hardbol',false);
 			r = this.moveTo(r,'hardeol',true);
 		}
-		this.props.store.select(this.merge_selection.add(r));
+		this.props.select(this.merge_selection.add(r));
 		e.preventDefault();
 		e.stopPropagation();
 		return false;
@@ -1249,7 +1177,7 @@ var Editor = createClass({
 				r = this.moveTo(r,'hardbol',false);
 				r = this.moveTo(r,'hardeol',true);
 			}
-			this.props.store.select(this.merge_selection.add(r));
+			this.props.select(this.merge_selection.add(r));
 			var ebr = this.node.getBoundingClientRect();
 			var scrollTop = -ebr.top;
 			//var scrollTop = this.node.ownerDocument.body.scrollTop;
@@ -1280,7 +1208,7 @@ var Editor = createClass({
 				r = this.moveTo(r,'hardbol',false);
 				r = this.moveTo(r,'hardeol',true);
 			}
-			this.props.store.select(this.merge_selection.add(r));
+			this.props.select(this.merge_selection.add(r));
 			e.preventDefault();
 			this.ensureFocus();
 		};
@@ -1288,7 +1216,7 @@ var Editor = createClass({
 	handleBodyMouseMove: function(e) {
 		if (this.mouseDown) {
 			var point = this.window_to_text(e);
-			this.props.store.select(
+			this.props.select(
 				this.merge_selection.add(new Region(point,this.anchor || point)));
 			e.preventDefault();
 		};
@@ -1661,7 +1589,7 @@ var Editor = createClass({
 	},
 	handleCut: function(e) {
 		this.handleClipboardEvent('cut', e);
-		this.props.store.replaceText(null, 0, '', null, false);
+		this.replaceText(null, 0, '', null, false);
 	},
 	handleCopy: function(e) {
 		this.handleClipboardEvent('copy', e);
@@ -1673,11 +1601,11 @@ var Editor = createClass({
 		//TODO
 		console.log('replace...')
 	},
-	replaceText: function(str, selection, offset) {
+	replaceText: function(selection, offset, str, attributes, compose) {
 		//TODO: factor out the offset stuff.
 		//TODO: stop using the store method.
 		var doc = this.document();
-		var sel = selection || this.state.selection;
+		var sel = selection || this.props.selection;
 		var off = offset || 0;
 		sel = new Selection(sel.regions.map(function(r) { 
 			return new Region(r.begin() + off, r.end()); }));
@@ -1711,7 +1639,7 @@ var Editor = createClass({
 			onInput: this.handleInput,
 			style: {top: this.top + 'px',"-webkit-user-select":"auto"},
 		});
-		this.preview = Preview({doc: this.state.doc, selection: this.state.selection, editor:this});
+		this.preview = Preview({doc: this.props.document, selection: this.props.selection, editor:this});
 		return DOM.div({className: 'editor',
 				onMouseDown: this.handleMouseDown,
 				onMouseUp: this.handleMouseUp,
@@ -1735,41 +1663,27 @@ var Editor = createClass({
 				zIndex: '-1000',
 				top: '0px',
 			}},[Preview({
-			doc: this.state.doc,
-			selection: this.state.selection,
+			doc: this.props.document,
+			selection: this.props.selection,
 			editor:this,
 			onlySelection: true,
 		})])]);
 	},
-	_onChange: function() {
-		var store = this.props.store;
-		this.setState({
-			doc: store.document(),
-			selection: store.selection
-		});
-	},
 	selection: function() {
-		return this.state.selection;
+		return this.props.selection;
 	},
 	select: function(selection) {
 		this.setState({selection: selection});
-		this.props.store.select(selection);
+		this.props.select(selection);
 		setTimeout(this.scrollToCursor, 10);
 	},
 	document: function() {
-		return this.state.doc;
-	},
-	store: function() {
-		return this.props.store;
+		return this.props.document;
 	},
 	apply: function(ops, selection, compose) {
 		//console.log(JSON.stringify(ops));
-		this.props.store.apply(ops, selection, compose);
-		console.log('After apply: ' + JSON.stringify(this.props.store.selection));
-	},
-	applyLocal: function(ops) {
-		this.props.store.applyLocal(ops);
-		console.log('After applyLocal: ' + JSON.stringify(this.props.store.selection));
+		this.props.apply(ops, selection, compose);
+		console.log('After apply: ' + JSON.stringify(this.props.selection));
 	},
 	scrollToCursor: function() {
 		//TODO: this should be smarter and 
@@ -1795,19 +1709,10 @@ var Editor = createClass({
 		this.textarea.node.style.top = top;
 		this.textarea.node.scrollIntoViewIfNeeded();
 		//scrollBy(0, mid-h/2);
-	},
-	undo: function() {
-		this.props.store.undo();
-	},
-	redo: function() {
-		this.props.store.redo();
-	},
+	}
 });
 
 module.exports = {
 	Editor: Editor,
-	Document: Document,
-	friar: friar,
-	htmlToDoc: htmlToDoc,
-	VALID_DOC: VALID_DOC,
+	Document: Document
 };
