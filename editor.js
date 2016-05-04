@@ -1714,5 +1714,10 @@ var Editor = createClass({
 
 module.exports = {
 	Editor: Editor,
-	Document: Document
+	Document: Document,
+	ottype: ottype,
+	ot: ottype,
+	render: render,
+	keyToId: keyToId,
+	idToKey: idToKey
 };
