@@ -161,6 +161,8 @@ function commands(editor) {
 						return editor.move(
 							new Region(nl.point + nl.node.size, r.anchor),
 							'characters',1,false, extend);
+					case 'table':
+						return new Region(nl.point, nl.point + nl.node.size);
 					case 'cell':
 						//TODO
 						var pt = nl.point + _cellOffset(nl.node, col, row)
@@ -795,6 +797,7 @@ var in_table_context = [{key:"head", operator:"equals", operand:"cell", match_al
 var keymap = [
 	{keys:["ctrl+k","b"], command:"table_move_to", args:{position:"bot"}},
 	{keys:["ctrl+k","e"], command:"table_move_to", args:{position:"eot"}},
+	{keys:["ctrl+a"], command:"table_move_to", args:{position:"table"}, context:in_table_context},
 	{keys:["ctrl+k","a","b","up","down"], command:"table_move", args:{mode:"yay", forward:true}},
 	{keys:["tab"], command:"table_move_cell", args:{forward:true}}, //, context:in_table_context},
 	{keys:["shift+tab"], command:"table_move_cell", args:{forward:false}}, //, context:in_table_context},
