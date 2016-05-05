@@ -39,6 +39,8 @@ var TEXT_CONTENT = {
 var VALID_DOC = {
 	'doc': {
 		'section':true,
+		'encrypt':true,
+		'encrypted':true,
 		_fixup: function(children) { return [wrap('section',children)]; },
 		_level: 0,
 	},
@@ -66,6 +68,38 @@ var VALID_DOC = {
 			return [wrap('p', children)]; 
 		},
 		_level: 1,
+	},
+	'encrypt':{
+		'keys':true,
+		'ops':true,
+		'p':true,
+		'h1':true,
+		'h2':true,
+		'h3':true,
+		'h4':true,
+		'h5':true,
+		'h6':true,
+		'blockquote':true,
+		'pullquote':true,
+		'ulli':true,
+		'olli':true,
+		'table':true,
+		'code':true,
+		'result':true,
+		'file':true,
+		'import':true,
+		'include':true,
+		_fixup: function(children) {
+			//TODO: probably want to do something smarter here.
+			//if child is section then we unwrap.
+			return [wrap('p', children)]; 
+		},
+		_level: 1,
+	},
+	'encrypted': {
+		'keys':true,
+		'ops':true,
+		_fixup: function(children) { return []; },
 	},
 	'p':TEXT_CONTENT,
 	'h1':TEXT_CONTENT,
