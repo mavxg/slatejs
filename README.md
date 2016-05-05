@@ -3,78 +3,18 @@ slate
 
 Document editor based on operational transforms of attributed strings
 
-
-gulp -- opens in browser
+npm run dev
 
 npm test -- run tests
 
 ## TODO
 
-### New
-
-Note, some of these are probably on Qubic not SlateJS
-
-* [ ] Qubic Front Page
-* [ ] Table Paste
-* [ ] File Embed
-* [ ] Cache result diff (don't send every recalc to server)
-* [ ] Cache can vary over category(s)
-* [ ] History Page
-* [ ] Fix cursor for encrypted region
-* [ ] Check if caching bug fixed (inline code math test - press recalc)
-
-### Nice to have
-
-* [ ] Async outstanding (probably in Qube)
-* [ ] @ format system (probably in Qube)
-* [ ] Charts (=Series(label, axis, values))
-
-### Old
-
-* [X] S-Expression document renderer
-* [X] Inline selection renderer
-* [X] FIX: Selection off by one error
-* [X] FIX: Selection fails outside lines
-* [X] FIX: Selection unstable under selection spans
-* [X] FIX: Selection fails in code
-* [X] Multiple selection
-* [X] Minimal selection update check
-* [X] Keyboard shortcut system *** 
-* [E] Table editor actions
-	- Merge/Unmerge cells (optional)
-	- Selection in single table context check
-	- Shift+Space = select row
-	- Ctrl+Space = select column
-	- Ctrl+Shift+% = apply percentage format
-	- Ctrl+Shift+# = apply date format
-* [E] Hookup Qube
-	- Insert global errors/messages
-	- Cache result ops.
-* [ ] Render out of date code (i.e. not yet calculated)
-* [ ] Copy/Cut (inc table)
-	- What does excel do about non rectangular selections
-		and cut and paste? Does it merge them? Can only copy selections
-		in a table if they line up (same start row and end row or same
-		start column and end column). Just get an error if you try to
-		copy something that doesn't line up.
-	- Ctrl+y = redo last action (can also be used to repeat if the redo buffer is empty)
-* [ ] Paste (inc table)
-* [X] Scroll to cursor
-* [X] Movement commands
-* [X] Delete commands
-* [ ] Attribute on paragraphs (??? how should it deal with tables
-	  - attribute if in vs attribute only if fully selected.)
-	  - Tables are shown fully selected so just attribute all the heads
-	  - could have an allowable attributes on the symbol
-	  	to avoid attributing things like a result with something that it
-	  	cannot have.
-
-* [ ] discard nop in livedb caused by _apply exception returning same doc.
-
-* [X] eraseText(region) on doc //just a replaceText with ""
-* [ ] Replace should balance missing closes by inserting after your insert.
-      and missing opens by inserting before your insert. (or just collapse the
-      selection like Google Docs)
+* [ ] Undo manager as a plugin
+* [ ] Qube separate from editor
+* [ ] Zoom is an overlay (wrapper)
+* [ ] Imports don't exist (how do we do what they do now)
+      Probably imports back as part of the language
+* [ ] Data cache
 
 # Encryption
 

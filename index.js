@@ -1,19 +1,21 @@
+var ids    = require('./ids');
+var editor = require('./editor');
 var ottype = require('ot-sexpr');
-var sharejs = require('share/lib/client');
-sharejs.registerType(ottype);
 
 var ottypes = {};
 ottypes[ottype.name] = ottypes[ottype.uri] = ottype;
 
 module.exports = {
-	editor: require('./lib/editor'),
+	Editor: editor.Editor,
+	Document: editor.Document,
 	type: ottype,
-	sharejs: sharejs,
 	ottypes: ottypes,
-	Dummy: require('dummy-sharejs-connection'),
-	Store: require('./lib/store'),
-	Selection: ottype.Selection,
-	Region: ottype.Region,
-	parse: ottype.parse,
-	plugins: require('./lib/plugins'),
+	render: require('./render'),
+	plugins: {
+		base: require('./plugins/base'),
+		file: require('./plugins/file'),
+		table: require('./plugins/table'),
+	},
+	keyToId: ids.keyToId,
+	idToKey: ids.idToKey
 };
