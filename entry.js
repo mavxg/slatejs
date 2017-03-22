@@ -5,6 +5,135 @@ import { parse, Selection, Region, apply, transformCursor } from 'ot-sexpr'
 const base = require('./plugins/base');
 const table = require('./plugins/table');
 
+
+//Dummy Blockstore object
+function BlockStore(dummy_cost) {
+	this.store = {};
+	this.dummy_cost = dummy_cost || 300;  //simulate 300ms to save/load block
+};
+BlockStore.prototype.get = function(key, callback) {
+	var thus = this;
+	setTimeout(function() {
+		callback(key, thus.store[key])
+	}, this.dummy_cost);
+};
+BlockStore.prototype.put = function(key, block, callback) {
+	this.store[key] = block;
+	setTimeout(function() {
+		if (callback) callback(key);
+	}, this.dummy_cost);
+};
+
+
+//This is not quite what we need..
+// as the put is not going to know the key
+// we need to do something different.
+function ObjStore(blockstore, deserialise, serialise) {
+	this.cache = {}; //blocks parsed
+	this.deserialise = deserialise;
+	this.serialise = serialise;
+	this.blockstore = blockstore;
+}
+ObjStore.prototype.get = function(key, callback) {
+	var obj = this.cache[key];
+	if (obj) return callback(key, obj);
+	var thus = this;
+	this.blockstore.get(key, function(key, block) {
+		//note this might not be enough... we need to have context to derive key
+		// to decrypt the block.
+		var obj = thus.deserialise(key, block);
+		this.cache[key] = obj;
+		callback(key, obj);
+	});
+};
+ObjStore.prototype.put = function(key, object, ) {
+	//TODO: this doesn't quite work.
+};
+
+
+//Dummy Table/Tree object.
+function Table(objstore, root_block) {
+	this.changes = {};
+	this.subscriptions = {};
+	this.all_subscription = [];
+	this.objstore = objstore;
+	this.root_block = root_block;
+	this._pending = {}; //blocks being fetched.
+};
+Table.prototype.fetch = function(key, callback) {
+	//Trigger fetch of a key not in cache
+	// not needed for the dummy store.
+	// override for block backed stuff...
+};
+Table.prototype.get = function(key, callback) {
+	var value = this.changes[key];
+	if (value != undefined) callback(key, value);
+	else this.fetch(key, callback);
+};
+Table.prototype.notify = function(key, value, old) {
+	var subs = this.subscriptions[key];
+	if (subs) for (var i = subs.length - 1; i >= 0; i--) {
+		try {
+			var f = subs[i];
+			f(key, value, old)
+		} catch (e) {
+			subs.splice(i,1) //remove subscriber on throw
+		}
+	}
+	subs = this.all_subscription;
+	for (var i = subs.length - 1; i >= 0; i--) {
+		try {
+			var f = subs[i];
+			f(key, value, old)
+		} catch (e) {
+			subs.splice(i,1) //remove subscriber on throw
+		}
+	}
+};
+Table.prototype.set = function(key, value) {
+	var old = this.cache[key];
+	//Notify subscribers
+	this.notify(key, value, old);
+};
+Table.prototype.subscribe = function(key, callback) {
+	var subs = this.subscriptions[key];
+	if (!(subs)) {
+		subs = this.subscriptions[key] = [];
+	}
+	subs.push(callback);
+	//NOTE: subscribe doesn't do a get
+	// and fetch doesn't notify subscribers.
+};
+Table.prototype.unsubscribe = function(key, callback) {
+	var subs = this.subscriptions[key];
+	if (!subs) return;
+	var i = subs.indexOf(callback);
+	if (i > -1) subs.splice(i, 1); //remove item
+};
+Table.prototype.subscribeAll = function(callback) {
+	this.all_subscription.push(callback);
+};
+Table.prototype.unsubscribeAll = function(callback) {
+	var subs = this.all_subscription;
+	var i = subs.indexOf(callback);
+	if (i > -1) subs.splice(i, 1); //remove item
+};
+
+//Note: Displayed table object should actually be pivot powered from the start.
+// all of the columns should be based upon id .. entries in cells are
+// all of the form {#ida:id, #idb:id, content: ... }
+// we then index that when we actually go to render the table.
+// any table size and in out can be afforded.
+// don't build the calculation tables we have elsewhere.
+// IO tables are just underspecified.
+
+// List items should be dummied up with paragraph items rather than trying to wrap them
+// Code items should not merge together unless they are in the same code block
+
+
+// FaaS - functions defined in blocks that you can then call upon... 
+// output of object should be storable (or cacheable).
+
 const doc = `(doc (section
 (p "")
 {"headerRows":1}(table

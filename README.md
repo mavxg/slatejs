@@ -9,24 +9,27 @@ npm test -- run tests
 
 ## TODO
 
-* [ ] Undo manager as a plugin
-* [ ] Qube separate from editor
-* [ ] Zoom is an overlay (wrapper)
-* [ ] Imports don't exist (how do we do what they do now)
-      Probably imports back as part of the language
-* [ ] Data cache
+What needs to be done to get to a block format (so we can support really large documents).
+
+### Dummy tree object
+
+* [ ] Tree.get(k, callback)
+* [ ] Tree.set(k, value)
+* [ ] Tree.subscribe(k, callback)
+* [ ] Tree.unsubscribe(k, callback)
+* [ ] Tree.subscribe(callback) -- subscribe all key changes
+* [ ] Tree.unsubscribe(callback)
+
+Note: if a subscription throws an exception it gets unsubscribed.
+
+### Real block backed tree object (key value store of blocks - encrypted?)
+
+* [ ] Dummy block store
+* [ ] Real block backed tree object
 
 # Encryption
 
-Add encrypted section. Generates key which it uses to encrypt the section and then encrypts that with your password based key.
-
-Where should we store the keys? Document object. Server sid
-
-  (encrypted (key "salt" "vhash", "encrypted key") ... encrypted data ...)
-
-  (encrypted (keys {pubid:..., key:encrypted key}) (encd nonce ... encrypted ops ...) (encd nonce ) ...)
-
-  server side we store a users public key and encrypted private key (which we only share with them) ... this way we can separate this out...
+Encryption should be at the block level. Much simpler to reason about.
 
 # IDEAS
 
