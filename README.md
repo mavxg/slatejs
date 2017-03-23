@@ -38,6 +38,10 @@ Encryption should be at the block level. Much simpler to reason about.
 * IDEA: lens/scratch sidebar. Show calculations pulled out to the side and how they change
   when you change the model.
 
+### Constraints based system
+
+Example: Sketchpad - constraints like these lines are parallel or this point is coincident with this point. Really cool in Sketchpad is the idea that the line segment is just a start and end point constrained on an infinite line so you can draw an arc to that line even if that line doesn't extend to the radius of the arc.
+
 ### Dependent dimensions
 
   dimensions: [{name:A, items:[...]},{name:B, items:[...]},{name:C, items:[...]}],

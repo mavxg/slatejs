@@ -5,19 +5,18 @@ import { parse, Selection, Region, apply, transformCursor } from 'ot-sexpr'
 const base = require('./plugins/base');
 const table = require('./plugins/table');
 
-
 //Dummy Blockstore object
-function BlockStore(dummy_cost) {
+function DummyBlockStore(dummy_cost) {
 	this.store = {};
 	this.dummy_cost = dummy_cost || 300;  //simulate 300ms to save/load block
 };
-BlockStore.prototype.get = function(key, callback) {
+DummyBlockStore.prototype.get = function(key, callback) {
 	var thus = this;
 	setTimeout(function() {
-		callback(key, thus.store[key])
+		callback(null, thus.store[key]);
 	}, this.dummy_cost);
 };
-BlockStore.prototype.put = function(key, block, callback) {
+DummyBlockStore.prototype.put = function(key, block, callback) {
 	this.store[key] = block;
 	setTimeout(function() {
 		if (callback) callback(key);
@@ -25,31 +24,197 @@ BlockStore.prototype.put = function(key, block, callback) {
 };
 
 
-//This is not quite what we need..
-// as the put is not going to know the key
-// we need to do something different.
-function ObjStore(blockstore, deserialise, serialise) {
-	this.cache = {}; //blocks parsed
+//B+Tree -- should be good for indexes but will probably
+// cause a large amount of block churn. TODO: need to
+// make it serialise to a block
+//??? Merge and remove....???
+//Might want to use something like a LSM tree
+// or investigate something from the Purelly functional
+// datastructures book.
+function LeafNode(order) {
+	this.order = order;
+
+	this.parentNode = null;
+	this.nextNode = null;
+	this.prevNode = null;
+
+	this.data = [];
+}
+LeafNode.prototype.isLeafNode = true;
+LeafNode.prototype.isInternalNode = false;
+LeafNode.prototype.split = function() {
+	var temp = new LeafNode(this.order);
+	var m = Math.ceil(this.data.length / 2);
+	var k = this.data[m-1].key;
+
+	temp.data = this.data.slice(0, m)
+	this.data = this.data.slice(m)
+
+	temp.parentNode = this.parentNode;
+	temp.nextNode = this;
+	temp.prevNode = this.prevNode;
+	if (temp.prevNode) temp.prevNode.nextNode = temp;
+	this.prevNode = temp;
+
+	if (!this.parentNode) {
+		var p = new InternalNode(this.order);
+		this.parentNode = temp.parentNode = p;
+	}
+
+	return this.parentNode.insert(k,temp, this);
+
+};
+LeafNode.prototype.insert = function(key, value) {
+	var pos = 0;
+	for (; pos < this.data.length; pos++) {
+		if (this.data[pos].key == key) {
+			this.data[pos].value = value;
+			return null;
+		}
+		if (this.data[pos].key > key) break;
+	}
+
+	if (this.data[pos])
+		this.data.splice(pos, 0, {key: key, value: value});
+	else
+		this.data.push({key: key, value: value});
+
+	// split if too big
+	if (this.data.length > this.order)
+		return this.split();
+	return null;
+};
+
+function InternalNode(order) {
+	this.order = order;
+	this.parentNode = null;
+	this.data = [];
+}
+InternalNode.prototype.isLeafNode = false;
+InternalNode.prototype.isInternalNode = true;
+InternalNode.prototype.split = function() {
+	var m = (this.data.length-1)/2;
+	if (this.order % 2) //TODO: this seems wrong... should this be this.data.length
+		m =  m - 1;
+	var temp = new InternalNode(this.order);
+	temp.parentNode = this.parentNode;
+	//TODO: this should just be temp.data = this.data.splice(0,m)
+	//       var key = temp.data.pop();
+	temp.data = this.data.slice(0,m);
+	var key = this.data[m]
+	this.data = this.date.slice(m + 1);
+
+	for (var i=temp.data.length-1; i >= 0; i--)
+		temp.data[i].parentNode = temp;
+
+	if (!this.parentNode)
+		this.parentNode = temp.parentNode = new InternalNode(this.order);
+
+	return this.parentNode.insert(key, temp, this);
+};
+InternalNode.prototype.insert = function(key, node1, node2) {
+	if (this.data.length > 0) {
+		var pos = 1;
+		for (; pos < this.data.length; pos += 2)
+			if (this.data[pos] > key) break;
+
+		if (this.data[pos]) {
+			pos--;
+			this.data.splice(pos, 0, key); //node1, key
+			this.data.splice(pos, 0, node1);
+		} else {
+			this.data[pos-1] = node1;
+			this.data.push(key);
+			this.data.push(node2);
+		}
+
+		if (this.data.length > (this.order * 2 + 1))
+			return this.split();
+		return null;
+	} else {
+		//TODO: this seems suboptimal
+		// [node1,key,node2,key2,node3,...]
+		// we should probably have two
+		// arrays
+		// keys = [key,key2,...]
+		// nodes = [node1, node2, node3,...]
+		this.data[0] = node1;
+		this.data[1] = key;
+		this.data[2] = node2;
+		return this;
+	}
+};
+
+
+function BTree(order) {
+	this.order = order || 4;
+	this.root = new LeafNode(this.order);
+}
+//???? TODO: what about insert (i.e. repeated keys)
+BTree.prototype.set = function(key, value) {
+	var node = this.getNode(key);
+	var ret = node.insert(key, value);
+	if (ret) this.root = ret;
+};
+BTree.prototype.get = function(key) {
+	var node = this.getNode(key);
+	for (var i=0; i<node.data.length; i++) if (node.data[i].key == key)
+		return node.data[i].value;
+	return null;
+};
+//getNode used for range queries (in combination with nextNode)
+BTree.prototype.getNode = function(key) {
+	var current = this.root;
+	var found = false;
+
+	while (current.isInternalNode) {
+		found = false;
+		var len = current.data.length;
+		for (var i=1; i < len; i+=2) {
+			if (key <= current.data[i]) {
+				current = current.data[i-1];
+				found = true;
+				break;
+			}
+		}
+
+		if (!found) current = current.data[len - 1];
+	}
+
+	return current;
+};
+
+window.BTree = BTree;
+
+function ObjStore(blockstore, deserialise, serialise, hash) {
+	this.cache = {}; //blocks parsed //Should be LRU store
 	this.deserialise = deserialise;
 	this.serialise = serialise;
 	this.blockstore = blockstore;
+	//fetching...??? debounce deduplicate calls
 }
-ObjStore.prototype.get = function(key, callback) {
+ObjStore.prototype.get = function(key, callback, context) {
 	var obj = this.cache[key];
-	if (obj) return callback(key, obj);
+	if (obj) return callback(null, obj);
 	var thus = this;
-	this.blockstore.get(key, function(key, block) {
-		//note this might not be enough... we need to have context to derive key
-		// to decrypt the block.
-		var obj = thus.deserialise(key, block);
-		this.cache[key] = obj;
-		callback(key, obj);
+	this.blockstore.get(key, function(err, block) {
+		if (err != null) return callback(err);
+		thus.deserialise(key, block, context, function(err, obj) {
+			if (err != null) return callback(err);
+			this.cache[key] = obj;
+		});
 	});
 };
-ObjStore.prototype.put = function(key, object, ) {
-	//TODO: this doesn't quite work.
+ObjStore.prototype.put = function(key, object, callback, context) {
+	//key can be null which means generate key
+	var block = this.serialise(key, object) //probably want this to callback. costly encryption
+	if (key == null) key = hash()
 };
 
+
+//What should be responsible for getting blocks here?
+// fetch or something else --- i.e. where are we implementing b+tree;
+// or hash tree?
 
 //Dummy Table/Tree object.
 function Table(objstore, root_block) {
