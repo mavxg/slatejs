@@ -33,6 +33,10 @@ Encryption should be at the block level. Much simpler to reason about.
 
 # IDEAS
 
+### Explorables
+
+http://explorableexplanations.com/
+
 (probably need columns --- before the rows in a table)
 
 * IDEA: lens/scratch sidebar. Show calculations pulled out to the side and how they change
