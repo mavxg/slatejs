@@ -145,24 +145,29 @@ InternalNode.prototype.insert = function(key, node1, node2) {
 	}
 };
 
-function BTree(order) {
+function BTree(order, rooty) {
 	this.order = order || 4;
-	this.root = new LeafNode(this.order);
+	this.root = rooty || new LeafNode(this.order);
 }
 //???? TODO: what about insert (i.e. repeated keys)
-BTree.prototype.set = function(key, value) {
-	var node = this.getNode(key);
-	var ret = node.insert(key, value);
-	if (ret) this.root = ret;
+BTree.prototype.set = function(key, value, callback) {
+	this.getNode(key, function(err, node) {
+		if (err != null) return callback(err);
+		var ret = node.insert(key, value);
+		if (ret) this.root = ret;
+		callback(null);
+	});
 };
-BTree.prototype.get = function(key) {
-	var node = this.getNode(key);
-	for (var i=0; i<node.data.length; i++) if (node.data[i].key == key)
-		return node.data[i].value;
-	return null;
+BTree.prototype.get = function(key, callback) {
+	this.getNode(key, function(err, node) {
+		if (err != null) return callback(err);
+		for (var i=0; i<node.data.length; i++) if (node.data[i].key == key)
+			return callback(null, node.data[i].value);
+		callback(null, null); //not found
+	});
 };
 //getNode used for range queries (in combination with nextNode)
-BTree.prototype.getNode = function(key) {
+BTree.prototype.getNode = function(key, callback) {
 	var current = this.root;
 	var found = false;
 
@@ -180,8 +185,26 @@ BTree.prototype.getNode = function(key) {
 		if (!found) current = current.data[len - 1];
 	}
 
-	return current;
+	callback(null, current);
 };
+
+
+//TODO: Cursor
+//        First()
+//        Last()
+//        Seek(key)
+//        Prev()
+//        Next()
+//        node() --current leaf node so you can do c.node().put(key, ...)
+
+//B+Tree = Bucket
+//   NextSequence()
+//   Put(key, value)
+//   Get(key)
+//   Delete(key)
+//   Cursor()
+//   ForEach(fn(key, value))
+//   CreateBucket(key) -- root: &node{isLeaf: true}, bucket: &bucket
 
 
 function hex(buffer) {
