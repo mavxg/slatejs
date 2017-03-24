@@ -243,7 +243,7 @@ SimpleMarshaller.prototype.serialise = function(obj, context, callback) {
 //  to another off system blockstore when we want to commit
 //  (that requires us to have some form of tree of what we
 //   want to send offsystem.)
-function StructStore(blockstore, marshaller, hash) {
+function StructStore(blockstore, marshaller) {
 	this.cache = {}; //blocks parsed //Should be LRU store
 	this.marshaller = marshaller || new SimpleMarshaller("password :)");
 	this.blockstore = blockstore;
@@ -254,12 +254,6 @@ function StructStore(blockstore, marshaller, hash) {
 	this._IdSequence = 0;
 	//fetching...??? debounce deduplicate calls
 }
-StructStore.prototype.newId = function() {
-	//newId assumes that real keys do not start with #
-	var id
-	id = this._IdSequence += 1
-	return "#" + id;
-};
 // Args
 //  key : string -- path in blockstore
 //  callback : func(err, obj)
@@ -272,9 +266,9 @@ StructStore.prototype.get = function(key, callback, context) {
 	var self = this;
 	this.blockstore.get(key, function(err, block) {
 		if (err != null) return callback(err); //failed to fetch.
-		self.marsheller.deserialise(block, context, function(err, obj) {
+		self.marshaller.deserialise(block, context, function(err, obj) {
 			if (err != null) return callback(err); //failed to deserialise.
-			this.cache[key] = obj;
+			self.cache[key] = obj;
 			callback(null, obj); //everything went fine.
 			//TODO: check here is we need to clear some memory from
 			// the LRU cache
@@ -288,9 +282,9 @@ StructStore.prototype.get = function(key, callback, context) {
 StructStore.prototype.put = function(key, obj, callback, context) {
 	// what should we do if it is not dirty
 	var self = this;
-	this.marsheller.serialise(obj, context, function(err, block, newkey) {
+	this.marshaller.serialise(obj, context, function(err, block, newkey) {
 		if (err != null) return callback(err);
-		var _key = key || newkey;
+		var _key = newkey || key;
 		if (_key != key) {
 			delete self.cache[key];
 			delete self._dirty[key];
@@ -316,10 +310,11 @@ StructStore.prototype.put = function(key, obj, callback, context) {
 // the new object somewhere might need to be
 // so for consistency we are going FULL ASYNC
 StructStore.prototype.allocate = function(obj, callback) {
-	var id = this.newId();
+	this._IdSequence += 1
+	var id = "#" + this._IdSequence;
 	this.cache[id] = obj;
 	this._dirty[id] = true;
-
+	callback(null, id);
 };
 //calls to forget should be rare(ish). This is for
 // objects you have asked the Store to manage (for persistence)
@@ -336,6 +331,7 @@ StructStore.prototype.isDirty = function(key) {
 };
 
 //make available in console.
+window.DummyBlockStore = DummyBlockStore;
 window.BTree = BTree;
 window.StructStore = StructStore;
 window.SimpleMarshaller = SimpleMarshaller;
