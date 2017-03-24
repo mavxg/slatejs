@@ -11,15 +11,15 @@ function DummyBlockStore(dummy_cost) {
 	this.dummy_cost = dummy_cost || 300;  //simulate 300ms to save/load block
 };
 DummyBlockStore.prototype.get = function(key, callback) {
-	var thus = this;
+	var self = this;
 	setTimeout(function() {
-		callback(null, thus.store[key]);
+		callback(null, self.store[key]);
 	}, this.dummy_cost);
 };
 DummyBlockStore.prototype.put = function(key, block, callback) {
 	this.store[key] = block;
 	setTimeout(function() {
-		if (callback) callback(key);
+		if (callback) callback(null, key);
 	}, this.dummy_cost);
 };
 
@@ -145,7 +145,6 @@ InternalNode.prototype.insert = function(key, node1, node2) {
 	}
 };
 
-
 function BTree(order) {
 	this.order = order || 4;
 	this.root = new LeafNode(this.order);
@@ -184,32 +183,162 @@ BTree.prototype.getNode = function(key) {
 	return current;
 };
 
-window.BTree = BTree;
 
-function ObjStore(blockstore, deserialise, serialise, hash) {
+function hex(buffer) {
+  var hexCodes = [];
+  var view = new DataView(buffer);
+  for (var i = 0; i < view.byteLength; i += 4) {
+    // Using getUint32 reduces the number of iterations needed (we process 4 bytes each time)
+    var value = view.getUint32(i)
+    // toString(16) will give the hex representation of the number without padding
+    var stringValue = value.toString(16)
+    // We use concatenation and slice for padding
+    var padding = '00000000'
+    var paddedValue = (padding + stringValue).slice(-padding.length)
+    hexCodes.push(paddedValue);
+  }
+
+  // Join all the hex strings into one
+  return hexCodes.join("");
+}
+
+function SimpleMarshaller(passphrase) {
+	this.passphrase = passphrase;
+}
+SimpleMarshaller.prototype.deserialise = function(bytes, context, callback) {
+	try {
+		var str = new TextDecoder().decode(bytes); //TODO: decrypt the bytes
+		var obj = JSON.parse(str);
+		callback(null, obj)
+	} catch (err) {
+		callback(err);
+	}
+};
+SimpleMarshaller.prototype.serialise = function(obj, context, callback) {
+	try {
+		var str = JSON.stringify(obj);
+		var bytes = new TextEncoder().encode(str); //TODO: encrypt the bytes
+		crypto.subtle.digest({
+			name: "SHA-256",
+		}, bytes).then(function(hash) {
+			callback(null, bytes, "sha256:" + hex(hash));
+		}).catch(callback)
+	} catch (err) {
+		callback(err);
+	}
+};
+
+
+//Called StructStore and not ObjStore to emphasise
+// that this is to store raw structs that a single
+// serialise method can get to a bit sequence to write
+// to disk somewhere
+//
+// serialise(obj, context, callback(err,byte[], [key]))
+// deserialise(byte[], context, callback(err, obj))
+//
+//TODO: should this do some form of storage to localhost?
+//  alternative is that we have some form of localhost
+//  blockstore alternative that we then move those blocks
+//  to another off system blockstore when we want to commit
+//  (that requires us to have some form of tree of what we
+//   want to send offsystem.)
+function StructStore(blockstore, marshaller, hash) {
 	this.cache = {}; //blocks parsed //Should be LRU store
-	this.deserialise = deserialise;
-	this.serialise = serialise;
+	this.marshaller = marshaller || new SimpleMarshaller("password :)");
 	this.blockstore = blockstore;
+	this._dirty = {}; //keys that are dirty
+	this.fetching = {}; //keys we are already fetching
+	this.sending = {}; //keys we are sending
+	this.unsaved = {};
+	this._IdSequence = 0;
 	//fetching...??? debounce deduplicate calls
 }
-ObjStore.prototype.get = function(key, callback, context) {
+StructStore.prototype.newId = function() {
+	//newId assumes that real keys do not start with #
+	var id
+	id = this._IdSequence += 1
+	return "#" + id;
+};
+// Args
+//  key : string -- path in blockstore
+//  callback : func(err, obj)
+//  context : any passed to deserialise to get the object back
+StructStore.prototype.get = function(key, callback, context) {
 	var obj = this.cache[key];
 	if (obj) return callback(null, obj);
-	var thus = this;
+	//TODO: check fetching here. Store callback in fetching list.
+	// note: not thread safe.
+	var self = this;
 	this.blockstore.get(key, function(err, block) {
-		if (err != null) return callback(err);
-		thus.deserialise(key, block, context, function(err, obj) {
-			if (err != null) return callback(err);
+		if (err != null) return callback(err); //failed to fetch.
+		self.marsheller.deserialise(block, context, function(err, obj) {
+			if (err != null) return callback(err); //failed to deserialise.
 			this.cache[key] = obj;
+			callback(null, obj); //everything went fine.
+			//TODO: check here is we need to clear some memory from
+			// the LRU cache
+			// simple cache and prev_cache?
 		});
 	});
 };
-ObjStore.prototype.put = function(key, object, callback, context) {
-	//key can be null which means generate key
-	var block = this.serialise(key, object) //probably want this to callback. costly encryption
-	if (key == null) key = hash()
+// put is to send a dirty object back to the underlying store
+// and should be called by the system on a commit of some form.
+//  callback func(err, newkey) --
+StructStore.prototype.put = function(key, obj, callback, context) {
+	// what should we do if it is not dirty
+	var self = this;
+	this.marsheller.serialise(obj, context, function(err, block, newkey) {
+		if (err != null) return callback(err);
+		var _key = key || newkey;
+		if (_key != key) {
+			delete self.cache[key];
+			delete self._dirty[key];
+		}
+		self.cache[_key] = obj;
+		self.sending[_key] = true;
+		delete self._dirty[_key];
+		self.blockstore.put(_key, block, function(err, __key) {
+			if (err != null) {
+				console.log("ERROR: couldn't save ...");
+				self.unsaved[__key];
+			}
+			delete self.sending[__key];
+		});
+		//callback happens before we know if it actually hit disk
+		callback(null, _key);
+	});
 };
+//  obj : any -- new minted object
+//  callback : func(err, key)
+//NOTE: this doesn't need to be async in this case
+// but other implementation that actually put
+// the new object somewhere might need to be
+// so for consistency we are going FULL ASYNC
+StructStore.prototype.allocate = function(obj, callback) {
+	var id = this.newId();
+	this.cache[id] = obj;
+	this._dirty[id] = true;
+
+};
+//calls to forget should be rare(ish). This is for
+// objects you have asked the Store to manage (for persistence)
+// that you are now happy to see deleted.
+StructStore.prototype.forget = function(key) {
+	delete this.cache[key];
+	delete this._dirty[key];
+};
+StructStore.prototype.dirty = function(key) {
+	this._dirty[key] = true;
+};
+StructStore.prototype.isDirty = function(key) {
+	return !!(this._dirty[key]);
+};
+
+//make available in console.
+window.BTree = BTree;
+window.StructStore = StructStore;
+window.SimpleMarshaller = SimpleMarshaller;
 
 
 //What should be responsible for getting blocks here?
