@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "friar": "git://github.com/mavxg/friar",
-    "ot-sexpr": "git://github.com/mavxg/ot-sexpr"
+    "ot-sexpr": "git://github.com/mavxg/ot-sexpr",
+    "protobufjs": "^6.6.5"
   }
 }

@@ -24,8 +24,12 @@ Note: if a subscription throws an exception it gets unsubscribed.
 
 ### Real block backed tree object (key value store of blocks - encrypted?)
 
+Protobuffer :)
+
+    pbjs -t static-module -w commonjs -o awesome.js awesome.proto
+
 * [ ] Dummy block store
-* [ ] Real block backed tree object
+* [ ] Real block backed tree object (protobuf the block store)
 
 # Encryption
 

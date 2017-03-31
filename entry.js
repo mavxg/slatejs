@@ -5,6 +5,10 @@ import { parse, Selection, Region, apply, transformCursor } from 'ot-sexpr'
 const base = require('./plugins/base');
 const table = require('./plugins/table');
 
+const awesome = require('./awesome');
+
+window.awesome = awesome
+
 //Dummy Blockstore object
 function DummyBlockStore(dummy_cost) {
 	this.store = {};
