@@ -193,6 +193,66 @@ BTree.prototype.getNode = function(key, callback) {
 };
 
 
+// Async callback cursor
+function Cursor() {
+	// TODO: what does this need?
+}
+Cursor.prototype.First = function(callback) {
+	// body...
+};
+Cursor.prototype.Last = function(callback) {
+	// body...
+};
+Cursor.prototype.Seek = function(key, callback) {
+	// body...
+};
+Cursor.prototype.Prev = function(callback) {
+	// Get Prev item ... must have called Last or Seek before this
+};
+Cursor.prototype.Next = function(callback) {
+	// Get Next item ... must have called First or Seek before this
+};
+Cursor.prototype.node = function(callback) {
+	// Return current leaf node so you can do put(key) on that node
+};
+
+function Bucket() {
+	// TODO: what does this need?
+	this.sequence = 0;
+}
+Bucket.prototype.NextSequence = function() {
+	this.sequence += 1;
+	return this.sequence;
+};
+Bucket.prototype.Put = function(key, value, callback) { //we need to have a callback because seek does
+	var c = new Cursor();
+	c.Seek(key, function(k, v) {
+		c.node().put(key, value);
+		//TODO: store in the node dirty list that this 
+		// needs persisting if it supports Persist(store, callback)
+		callback();
+	});
+};
+Bucket.prototype.Get = function(key, callback) {
+	var c = new Cursor();
+	c.Seek(key, function(k, v) {
+		if (k != key) return callback(key, null); //should we actually return the found k?
+		callback(key, v);
+	});
+};
+Bucket.prototype.Delete = function(key) {
+	// body...
+};
+Bucket.prototype.Cursor = function() {
+	// TODO: return a Cursor to this Bucket
+};
+// Idea
+Bucket.prototype.Persist = function(store, callback) {
+	// TODO: Persist the root node
+	//  after persiting all the root nodes dirty list
+	//  etc.
+};
+
 //TODO: Cursor
 //        First()
 //        Last()
@@ -209,6 +269,7 @@ BTree.prototype.getNode = function(key, callback) {
 //   Cursor()
 //   ForEach(fn(key, value))
 //   CreateBucket(key) -- root: &node{isLeaf: true}, bucket: &bucket
+///// we don't need to have a special bucket type ... bucket is tree
 
 
 function hex(buffer) {
@@ -254,6 +315,41 @@ SimpleMarshaller.prototype.serialise = function(obj, context, callback) {
 		callback(err);
 	}
 };
+
+
+// MarshalStore sits between a CacheStore and a
+// backend store. Its job is to handle things like
+// encryption and decryption
+function MarshalStore(blockstore, marshaller) {
+	this.blockstore = blockstore;
+	this.marshaller = marshaller;
+}
+MarshalStore.prototype.get = function(key, callback, context) {
+	var marshaller = this.marshaller;
+	this.blockstore.get(key, function(err, value) {
+		if (err != null) return callback(err);
+		marshaller.deserialise(value, context, callback);
+	}, context);
+};
+MarshalStore.prototype.put = function(key, obj, callback, context) {
+	var self = this;
+	this.marshaller.serialise(obj, context, function(err, block, newkey) {
+		if (err != null) return callback(err);
+		var _key = newkey || key;
+		self.blockstore.put(_key, block, callback);
+	});
+};
+
+// CacheStore caches objects it gets back from the ...
+function CacheStore(blockstore) {
+	this.cache = {};
+	this.blockstore = blockstore;
+}
+//TODO: simple cacheStore -- don't
+
+
+//!!!! IMPORTANT --- StructStore should not be responsible for unsaved changes.
+
 
 
 //Called StructStore and not ObjStore to emphasise
