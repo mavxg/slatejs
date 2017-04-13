@@ -214,24 +214,128 @@ Cursor.prototype.Next = function(callback) {
 };
 Cursor.prototype.node = function(callback) {
 	// Return current leaf node so you can do put(key) on that node
+	//TODO: 
+	//  want a different actual API for this as you
+	//  can have an in memory put that is syncronous and
+	//  only worry about nodes when you spill to disk
 };
 
-function Bucket() {
-	// TODO: what does this need?
-	this.sequence = 0;
+//Duplicate keys --- include value in key prefix.
+// can just have all key.. in index and forget about having the value
+// at all. This would let you do some really cool stuff.
+// You can use a signed int for the value to do something cool with that
+//  like the valus actually part of the key... (are we okay with 4 bytes)
+
+//IDEAS for text buffer
+///   rope
+///   gap buffer
+///   piece table -- this is how word works -- basically you keep the original untouched
+///        and you build up a list of chunks of the original and chuncks of new buffers.
+
+
+/// LIVE queries are tags on an index that get notified when the index gets updated.
+
+
+const BUCKET_TYPE = 0x01
+const LEAF_TYPE = 0x02
+const BRANCH_TYPE = 0x03
+
+const MINIMUM_BRANCHING_FACTOR = 8; //Bolt has this set at 2.
+
+
+const NODE_HEADER_SIZE = 8; //magic 4 plus count 4
+const NODE_ELEMENT_SIZE = 12; // 4:pos, 4:ksize, 4:vsize
+
+function Node(bucket, parent, key_in_parent, value) {
+	//represents the in memory deserialised version of a node
+	this.bucket = bucket;
+	this.key = key_in_parent; // key in parent
+	this.parent = parent; //parent node
+	this.isLeaf = true;
+	//parallel arrays for inodes
+	this.keys = [];
+	this.values = []; //
+	this.dirty = false;
+
+	if (value)
+		this.read(value);
 }
+Node.prototype.write = function(callback) {
+	//
+};
+Node.prototype.spill = function(first_argument) {
+	// body...
+
+};
+Node.prototype.minKeys = function() {
+	if (this.isLeaf) return 1;
+	return MINIMUM_BRANCHING_FACTOR;
+};
+Node.prototype.read = function(value) {
+	//make it looks like uint32 to get count
+	// read
+	this.isLeaf = value[0] == LEAF_TYPE;
+
+};
+Node.prototype.put = function(key, value) {
+	this.dirty = true;
+	//TODO: insert or replace value
+};
+
+Node.prototype.size = function() {
+	var size = NODE_HEADER_SIZE;
+	for (var i = this.keys.length - 1; i >= 0; i--) {
+		size += NODE_ELEMENT_SIZE + this.keys[i].byteLength + this.values[i].byteLength;
+	}
+};
+
+function Bucket(store, value) {
+	if (value == undefined) {
+		value = new Uint32Array([1,0,0])
+	}
+
+	// TODO: what does this need?
+	this.store = store; //Should this actually be some form of namespace thing later?
+	// we need to hand this store down to the nodes
+	this.sequence = new Uint32Array(value.buffer, 4, 2);
+	this.rootNode = null;
+	this.rootKey;
+
+	this.nodes = {}; //cache of open nodes
+	this.buckets = {}; //cache of open buckets
+}
+Bucket.prototype.node = function(page_key, parent) {
+	var node = this.nodes[page_key]; // return from cache
+	//otherwise make a node
+	// and read in the page into the node.
+	// and set this.nodes[page_key]
+	return node; //does this actually need to be a callback.
+};
 Bucket.prototype.NextSequence = function() {
 	this.sequence += 1;
 	return this.sequence;
 };
-Bucket.prototype.Put = function(key, value, callback) { //we need to have a callback because seek does
-	var c = new Cursor();
-	c.Seek(key, function(k, v) {
-		c.node().put(key, value);
-		//TODO: store in the node dirty list that this 
-		// needs persisting if it supports Persist(store, callback)
-		callback();
-	});
+Bucket.prototype.Sequence = function() {
+	return this.sequence;
+};
+Bucket.prototype.SetSequence = function(value) {
+	this.sequence = value;
+};
+Bucket.prototype.Put = function(key, value) {
+	//if we have the node in cache then we set in that node
+	// otherwise we set in pending and only fetch the node when
+	// we come to commit.
+	// This way we don't need to be Async for Put
+	//   might throw an error if we are out of memory
+
+	// indexes? ... where do we put these?
+
+	// key: Uint8Array
+	// value: Uint8Array -- byte array
+};
+Bucket.prototype.PutBucketLike = function(key, bucket_like) {
+	// body...
+	// we use this to put Block aware items into this bucket
 };
 Bucket.prototype.Get = function(key, callback) {
 	var c = new Cursor();
@@ -241,17 +345,174 @@ Bucket.prototype.Get = function(key, callback) {
 	});
 };
 Bucket.prototype.Delete = function(key) {
-	// body...
+	// can be sync for same reason as Put
+	// pending deletes -- note: these are on a Bucket --- so if we are modifying a sub bucket
+
+	// mark the node as perhaps needing rebalancing (only if we actually do a delete)
 };
 Bucket.prototype.Cursor = function() {
 	// TODO: return a Cursor to this Bucket
 };
-// Idea
-Bucket.prototype.Persist = function(store, callback) {
-	// TODO: Persist the root node
-	//  after persiting all the root nodes dirty list
-	//  etc.
+Bucket.prototype.inlineable = function() {
+	// isLeaf
 };
+Bucket.prototype.rebalance = function() {
+	var nodes = this.nodes;
+	var buckets = this.buckets;
+	for (var k in nodes) nodes[k].rebalance();
+	for (var k in buckets) buckets[k].rebalance();
+};
+Bucket.prototype.spill = function() {
+	// Split up a bucket into all the sub buckets (not sure that this is a great idea?)
+	var buckets = this.buckets;
+	for (var name in buckets) {
+		var bucket = buckets[name];
+		//inline or spill
+		bucket.spill();
+		//TODO: put the bucket in place (we only know what it is once we write the bucket)
+		//c.seek(name); c.node().put(name, name, value, 0, bucketLeafFlag)
+	}
+	if (this.rootNode == null) return;
+	this.rootNode.spill();
+};
+// Idea (Bucket IS A transaction and you can just GC it to dispose)
+//  ---- This is a BAD idea since we want to do something different
+//       for the root bucket vs everything else (
+//         since for the root bucket we want to inline the first node always.)
+Bucket.prototype.Commit = function(callback) {
+	// TODO: Persist the root node
+	//   after persiting all the root nodes dirty list
+	//   etc.
+
+	//TODO: need to wait for all the nodes we need to be ready.
+	//  so that we can save down all the pending stuff.
+
+	// if we run out of memory then we 
+	// should -- assuming we have the connection
+	// begin to write out some of the nodes.
+
+	this.rebalance();
+	this.spill(); //spill for a node includes a write.
+
+	//write all pages to disk
+	//write self.
+
+	//TODO: this should just be commit all subnodes
+	// since some of the subnodes will be Bucket like and others
+	// will not.
+};
+
+// ^^^ values and keys are both byte arrays at this point. ???
+// What about an unpersisted block... how do we know where they
+// are going to be.
+
+
+/*
+
+DB 
+  Begin() -> Tx
+  Update(func(Tx) {})
+  View(func(Tx read only) {}) --- read transactions are always on a view of a bucket
+  // so  this doesn't make sense as an API here.
+
+Tx
+
+//Our Bucket instance is a transaction
+
+
+Commit
+   root.rebalance() --- we can do all this on the Bucket itself
+     root is a Bucket
+     nodes rebalance() -- only nodes we have opened
+     buckets rebalance() -- only buckets we have opened
+   root.spill()
+   tx.write()
+     write any dirty pages to disk (tx.pages)
+   tx.writeMeta()
+   tx.close()
+OnCommit
+
+
+// Do we need a meta ... or is the root just a simple
+// bucket.
+//    ... what about stats and things like that?
+// what if we want to know things like how big the database is?
+
+/*
+OUR on disk structure
+
+??? Where are we going to store the sequence for a bucket or the page size ???
+
+page {
+	magic uint32 //different for leaf and internal node (first byte should align with..)
+	count uint32 
+	elements[count] element
+	//key0,value0,key1,value1,etc
+}
+
+element {
+	pos uint32
+	ksize uint32
+	vsize uint32
+}
+
+
+/// b+tree bucket header
+
+{
+	magic uint32; //this is 1 byte for a b+tree type and  then the rest is for pageSize
+	//pageSize = (1 << (magic && 0x00FFFFFF))
+	sequence uint64 //NOTE that max safe int is 2**53 - 1
+	//so this is actually stored as two uint32 numbers in a row
+}
+
+//bucket inline
+
+{ bucket header }{ bucket root page (leaf or internal) }
+
+//bucket not inline
+
+{ bucket header }{ address for root node }
+
+//write inline bucket
+// n = b.rootNode
+// value = make(bucketHeaderSize + n.size)
+
+// In memory bucket structure
+Bucket {
+	*bucket
+	buckets -- sub buckets cache
+	rootNode -- materialize vnode for root page
+	nodes map[...]*node //node cache
+}
+
+// Different magic for 64bit or varint version of this structure.
+
+
+// URL.createObjectURL(blob ish) lets you do some nice stuff with returned buffer
+
+/*
+
+XMLHttpRequest.response -> ArrayBuffer, Blob, Document (XML or HTML), JSON, or DOMString
+
+*/
+
+/*
+meta {
+	magic uint32
+	version uint32
+	pageSize uint32
+	flags uint32
+	root bucket { root pgid, sequence uint64 }
+	freelist pgid
+	pgid
+	txid
+	checksum uint64
+}
+*/
+
+//What should the Tx do... We can have a long running transaction
+
 
 //TODO: Cursor
 //        First()
@@ -349,7 +610,11 @@ function CacheStore(blockstore) {
 
 
 //!!!! IMPORTANT --- StructStore should not be responsible for unsaved changes.
+// The Transaction is what has the unsaved changes as part of the deserialised
+// nodes it gets from the Store. It is a transactions responsiblity to know when
+// it can clean out nodes. etc.
 
+// Other stuff may be in the cache (but should be in the encrypted state)
 
 
 //Called StructStore and not ObjStore to emphasise
