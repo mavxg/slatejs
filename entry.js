@@ -12,7 +12,7 @@ window.awesome = awesome
 //Dummy Blockstore object
 function DummyBlockStore(dummy_cost) {
 	this.store = {};
-	this.dummy_cost = dummy_cost || 300;  //simulate 300ms to save/load block
+	this.dummy_cost = dummy_cost || 200;  //simulate 200ms to save/load block
 };
 DummyBlockStore.prototype.get = function(key, callback) {
 	var self = this;
@@ -194,8 +194,9 @@ BTree.prototype.getNode = function(key, callback) {
 
 
 // Async callback cursor
-function Cursor() {
-	// TODO: what does this need?
+function Cursor(bucket) {
+	this.bucket = bucket;
+	this.stack = []; //{index,node}
 }
 Cursor.prototype.First = function(callback) {
 	// body...
@@ -204,7 +205,8 @@ Cursor.prototype.Last = function(callback) {
 	// body...
 };
 Cursor.prototype.Seek = function(key, callback) {
-	// body...
+	// body... knows about pages and nodes and can get a value from a page
+	// without first getting to the node.
 };
 Cursor.prototype.Prev = function(callback) {
 	// Get Prev item ... must have called Last or Seek before this
@@ -214,10 +216,10 @@ Cursor.prototype.Next = function(callback) {
 };
 Cursor.prototype.node = function(callback) {
 	// Return current leaf node so you can do put(key) on that node
-	//TODO: 
-	//  want a different actual API for this as you
-	//  can have an in memory put that is syncronous and
-	//  only worry about nodes when you spill to disk
+
+
+
+
 };
 
 //Duplicate keys --- include value in key prefix.
@@ -247,68 +249,112 @@ const NODE_HEADER_SIZE = 8; //magic 4 plus count 4
 const NODE_ELEMENT_SIZE = 12; // 4:pos, 4:ksize, 4:vsize
 
 function Node(bucket, parent, key_in_parent, value) {
-	//represents the in memory deserialised version of a node
+	//represents the in memory deserialised version of a page
 	this.bucket = bucket;
 	this.key = key_in_parent; // key in parent
 	this.parent = parent; //parent node
+	this.children = []; //we append any children we materialise here
 	this.isLeaf = true;
 	//parallel arrays for inodes
-	this.keys = [];
-	this.values = []; //
-	this.dirty = false;
+	this.unbalanced = false;
+	this.dirty = false; //bolt doesn't need this because it caches pages not nodes
 
 	if (value)
 		this.read(value);
 }
-Node.prototype.write = function(callback) {
-	//
+Node.prototype.rebalance = function() {
+	if (!this.unbalanced) return;
+	//TODO: actually rebalance with neighbour if doable.
 };
-Node.prototype.spill = function(first_argument) {
+Node.prototype.write = function(buffer) {
+	// TODO: write onto the buffer
+};
+Node.prototype.spillChildren = function(callback) {
 	// body...
+};
+Node.prototype.spill = function(callback) {
+	if (!this.dirty) return callback(null, null);
 
 };
 Node.prototype.minKeys = function() {
 	if (this.isLeaf) return 1;
 	return MINIMUM_BRANCHING_FACTOR;
 };
-Node.prototype.read = function(value) {
-	//make it looks like uint32 to get count
+Node.prototype.read = function(value) {  //value is a page
+	//make it look like uint32 to get count
 	// read
 	this.isLeaf = value[0] == LEAF_TYPE;
 
 };
-Node.prototype.put = function(key, value) {
-	this.dirty = true;
+Node.prototype.put = function(key, value) { //NOTE: the reason for the new and old key is if we have changed the first key in a leaf and need to change the key in the branch node.
 	//TODO: insert or replace value
+	this.dirty = true;
+};
+Node.prototype.delete = function(key) {
+	// TODO
+	this.unbalanced = true;
+	this.dirty = true;
+};
+Node.prototype.childAt = function(index, callback) {
+	// body...
 };
 
 Node.prototype.size = function() {
 	var size = NODE_HEADER_SIZE;
-	for (var i = this.keys.length - 1; i >= 0; i--) {
-		size += NODE_ELEMENT_SIZE + this.keys[i].byteLength + this.values[i].byteLength;
-	}
+	//for (var i = this.keys.length - 1; i >= 0; i--) {
+	//	size += NODE_ELEMENT_SIZE + this.keys[i].byteLength;
+	//	//TODO: we need to actually store the inodes and use them
+	//	// this is not going to work as is.
+	//}
 };
 
-function Bucket(store, value) {
-	if (value == undefined) {
-		value = new Uint32Array([1,0,0])
+
+/* Async */
+function noop() {}
+
+function each(obj, iterator, callback) {
+	callback = callback || noop;
+	var pending = 0;
+	var completed = 0;
+
+	for (var k in obj) {
+		if (obj.hasOwnProperty(k)) {
+			++pending;
+			iterator(obj[k],done)
+		}
 	}
 
-	// TODO: what does this need?
-	this.store = store; //Should this actually be some form of namespace thing later?
-	// we need to hand this store down to the nodes
-	this.sequence = new Uint32Array(value.buffer, 4, 2);
-	this.rootNode = null;
-	this.rootKey;
+	function done(err) {
+		if (err) {
+			var dn = callback;
+			callback = noop;
+			dn(err);
+		} else if (++completed===pending) {
+			callback(null);
+		}
+	}
+}
+/* end Async */
+
+
+function Bucket(store) {
+	this.store = store;
+	this.sequence = 0
+	this.rootNode = null; //TODO: we should always be able to set this
 
 	this.nodes = {}; //cache of open nodes
 	this.buckets = {}; //cache of open buckets
 }
-Bucket.prototype.node = function(page_key, parent) {
+Bucket.prototype.node = function(page_key, parent, callback) {
+	//called from Cursor node
+
 	var node = this.nodes[page_key]; // return from cache
 	//otherwise make a node
 	// and read in the page into the node.
 	// and set this.nodes[page_key]
+
+	//add this node to parent.children
+
 	return node; //does this actually need to be a callback.
 };
 Bucket.prototype.NextSequence = function() {
@@ -321,85 +367,76 @@ Bucket.prototype.Sequence = function() {
 Bucket.prototype.SetSequence = function(value) {
 	this.sequence = value;
 };
-Bucket.prototype.Put = function(key, value) {
-	//if we have the node in cache then we set in that node
-	// otherwise we set in pending and only fetch the node when
-	// we come to commit.
-	// This way we don't need to be Async for Put
-	//   might throw an error if we are out of memory
-
-	// indexes? ... where do we put these?
-
+Bucket.prototype.Put = function(key, value, callback) {
 	// key: Uint8Array
 	// value: Uint8Array -- byte array
-};
-Bucket.prototype.PutBucketLike = function(key, bucket_like) {
-	// body...
-	// we use this to put Block aware items into this bucket
+	var c = this.Cursor();
+	c.Seek(key, function(k, v) {
+		c.node(function(err, node) {
+			if (err) return callback(err);
+			node.put(key, value);
+			callback(null);
+		});
+	});
 };
 Bucket.prototype.Get = function(key, callback) {
-	var c = new Cursor();
-	c.Seek(key, function(k, v) {
-		if (k != key) return callback(key, null); //should we actually return the found k?
+	var c = this.Cursor();
+	c.Seek(key, function(err, k, v) {
+		if (k != key) return callback(k, null);
 		callback(key, v);
 	});
 };
-Bucket.prototype.Delete = function(key) {
-	// can be sync for same reason as Put
-	// pending deletes -- note: these are on a Bucket --- so if we are modifying a sub bucket
-
-	// mark the node as perhaps needing rebalancing (only if we actually do a delete)
+Bucket.prototype.Delete = function(key, callback) {
+	var c = this.Cursor();
+	c.Seek(key, function(err, k, v) {
+		if (err) return callback(err);
+		if (k !== key) return callback("No such key");
+		c.node(function(err, node) {
+			if (err) return callback(err);
+			node.delete(key);
+			callback(null);
+		});
+	});
+};
+Bucket.prototype.RegisterBucket = function(key, sub_bucket) {
+	this.buckets[key] = {k:key, b:sub_bucket}; //if we have opened or created something that is bucket like
 };
 Bucket.prototype.Cursor = function() {
-	// TODO: return a Cursor to this Bucket
-};
-Bucket.prototype.inlineable = function() {
-	// isLeaf
+	return new Cursor(this);
 };
 Bucket.prototype.rebalance = function() {
 	var nodes = this.nodes;
 	var buckets = this.buckets;
-	for (var k in nodes) nodes[k].rebalance();
-	for (var k in buckets) buckets[k].rebalance();
+	for (var k in nodes) nodes[k].rebalance(); //only does something for deletes
+	for (var k in buckets) buckets[k].b.rebalance();
 };
-Bucket.prototype.spill = function() {
-	// Split up a bucket into all the sub buckets (not sure that this is a great idea?)
-	var buckets = this.buckets;
-	for (var name in buckets) {
-		var bucket = buckets[name];
-		//inline or spill
-		bucket.spill();
-		//TODO: put the bucket in place (we only know what it is once we write the bucket)
-		//c.seek(name); c.node().put(name, name, value, 0, bucketLeafFlag)
-	}
-	if (this.rootNode == null) return;
-	this.rootNode.spill();
+Bucket.prototype.spill = function(max_inline, callback) {
+	each(this.buckets,function (bucket, done) {
+		//spill all registered child buckets
+		bucket.b.spill(max_inline, function(err, value) {
+			if (err) return done(err);
+
+		});
+	}, function(err) {
+		if (err) return callback(err);
+		if (this.rootNode.dirty) {
+			// spillChildren
+			// write bucket header
+			// write node
+			// if buffer.byteLength > max_inline we put and return key
+			// otherwise we return buffer as value
+		}
+	})
+
 };
-// Idea (Bucket IS A transaction and you can just GC it to dispose)
-//  ---- This is a BAD idea since we want to do something different
-//       for the root bucket vs everything else (
-//         since for the root bucket we want to inline the first node always.)
+
 Bucket.prototype.Commit = function(callback) {
 	// TODO: Persist the root node
 	//   after persiting all the root nodes dirty list
 	//   etc.
 
-	//TODO: need to wait for all the nodes we need to be ready.
-	//  so that we can save down all the pending stuff.
-
-	// if we run out of memory then we 
-	// should -- assuming we have the connection
-	// begin to write out some of the nodes.
-
-	this.rebalance();
-	this.spill(); //spill for a node includes a write.
-
-	//write all pages to disk
-	//write self.
-
-	//TODO: this should just be commit all subnodes
-	// since some of the subnodes will be Bucket like and others
-	// will not.
+	this.rebalance(); //can be done syncronously
+	this.spill(4000, callback);
 };
 
 // ^^^ values and keys are both byte arrays at this point. ???
