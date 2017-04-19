@@ -5,10 +5,6 @@ import { parse, Selection, Region, apply, transformCursor } from 'ot-sexpr'
 const base = require('./plugins/base');
 const table = require('./plugins/table');
 
-const awesome = require('./awesome');
-
-window.awesome = awesome
-
 //Dummy Blockstore object
 function DummyBlockStore(dummy_cost) {
 	this.store = {};
@@ -238,74 +234,265 @@ Cursor.prototype.node = function(callback) {
 /// LIVE queries are tags on an index that get notified when the index gets updated.
 
 
+// keys shoud be Uint8Array
+// values should be DataViews (until they are converted)
+
 const BUCKET_TYPE = 0x01
+const BUCKET_MAGIC = 0x0100BCE7
 const LEAF_TYPE = 0x02
+const LEAF_MAGIC = 0x02001EAF
 const BRANCH_TYPE = 0x03
+const BRANCH_MAGIC = 0x03B7A9C0
 
 const MINIMUM_BRANCHING_FACTOR = 8; //Bolt has this set at 2.
-
 
 const NODE_HEADER_SIZE = 8; //magic 4 plus count 4
 const NODE_ELEMENT_SIZE = 12; // 4:pos, 4:ksize, 4:vsize
 
+//binary search 
+function search(length, f) {
+	var i = 0|0;
+	var j = length|0;
+	var h;
+	while (i < j) {
+		h = i + (((j-i)/2)|0);
+		if (!f(h)) {
+			i = h + 1;
+		} else {
+			j = h;
+		}
+	}
+	return i;
+}
+
+//a and b are both Uint8Arrays
+function bytesEqual(a, b) {
+	if (a.byteLength != b.byteLength) return false;
+	for (var i = 0; i < a.length; i++)
+		if (a[i] !== b[i]) return false;
+	return true;
+}
+
+
+//FROM https://github.com/madmurphy/stringview.js/blob/master/stringview.js
+function getUTF8CharLength(c) {
+	return c < 0x80 ? 1 : c < 0x800 ? 2 : c < 0x10000 ? 3 : c < 0x200000 ? 4 : c < 0x4000000 ? 5 : 6;
+}
+
+function putUTF8CharCode(aTarget, nChar, nPutAt) {
+	console.log(nChar)
+	var nIdx = nPutAt;
+
+	if (nChar < 0x80 /* 128 */) {
+		/* one byte */
+		aTarget[nIdx++] = nChar;
+	} else if (nChar < 0x800 /* 2048 */) {
+		/* two bytes */
+		aTarget[nIdx++] = 0xc0 /* 192 */ + (nChar >>> 6);
+		aTarget[nIdx++] = 0x80 /* 128 */ + (nChar & 0x3f /* 63 */);
+	} else if (nChar < 0x10000 /* 65536 */) {
+		/* three bytes */
+		aTarget[nIdx++] = 0xe0 /* 224 */ + (nChar >>> 12);
+		aTarget[nIdx++] = 0x80 /* 128 */ + ((nChar >>> 6) & 0x3f /* 63 */);
+		aTarget[nIdx++] = 0x80 /* 128 */ + (nChar & 0x3f /* 63 */);
+	} else if (nChar < 0x200000 /* 2097152 */) {
+		/* four bytes */
+		aTarget[nIdx++] = 0xf0 /* 240 */ + (nChar >>> 18);
+		aTarget[nIdx++] = 0x80 /* 128 */ + ((nChar >>> 12) & 0x3f /* 63 */);
+		aTarget[nIdx++] = 0x80 /* 128 */ + ((nChar >>> 6) & 0x3f /* 63 */);
+		aTarget[nIdx++] = 0x80 /* 128 */ + (nChar & 0x3f /* 63 */);
+	} else if (nChar < 0x4000000 /* 67108864 */) {
+		/* five bytes */
+		aTarget[nIdx++] = 0xf8 /* 248 */ + (nChar >>> 24);
+		aTarget[nIdx++] = 0x80 /* 128 */ + ((nChar >>> 18) & 0x3f /* 63 */);
+		aTarget[nIdx++] = 0x80 /* 128 */ + ((nChar >>> 12) & 0x3f /* 63 */);
+		aTarget[nIdx++] = 0x80 /* 128 */ + ((nChar >>> 6) & 0x3f /* 63 */);
+		aTarget[nIdx++] = 0x80 /* 128 */ + (nChar & 0x3f /* 63 */);
+	} else /* if (nChar <= 0x7fffffff) */ { /* 2147483647 */
+		/* six bytes */
+		aTarget[nIdx++] = 0xfc /* 252 */ + /* (nChar >>> 30) may be not safe in ECMAScript! So...: */ (nChar / 1073741824);
+		aTarget[nIdx++] = 0x80 /* 128 */ + ((nChar >>> 24) & 0x3f /* 63 */);
+		aTarget[nIdx++] = 0x80 /* 128 */ + ((nChar >>> 18) & 0x3f /* 63 */);
+		aTarget[nIdx++] = 0x80 /* 128 */ + ((nChar >>> 12) & 0x3f /* 63 */);
+		aTarget[nIdx++] = 0x80 /* 128 */ + ((nChar >>> 6) & 0x3f /* 63 */);
+		aTarget[nIdx++] = 0x80 /* 128 */ + (nChar & 0x3f /* 63 */);
+	}
+
+	return nIdx;
+
+};
+
+//TODO: this is very similar to new TextEncoder().encode()
+function stoa(str, array, offset) {
+	//convert a DOMstring to a Uint8Array
+	//TODO: want to put our string type specifier
+	//      at the start of this.
+	offset = offset || 0;
+
+	if (!array) {
+		var outputLen = offset;
+		for (var i = 0; i < str.length; i++)
+			outputLen += getUTF8CharLength(str.codePointAt(i));
+		array = new Uint8Array(outputLen);
+	}
+
+	for (var i = 0, o = offset; i < str.length; i++)
+		o = putUTF8CharCode(array, str.codePointAt(i), o);
+
+	return array;
+}
+
+function atos(array, offset) {
+	//NOTE: Not IE
+	return new TextDecoder().decode(array, offset);
+}
+
+window.stoa = stoa;
+
+/*
+
+NOTE: all values stored big-endian (i.e. network ordering)
+
+page {
+	magic uint32 //different for leaf and internal node (first byte should align with..)
+	count uint32 
+	elements[count] element
+	//key0,value0,key1,value1,etc
+}
+
+element {
+	pos uint32
+	ksize uint32
+	vsize uint32
+}
+
+*/
+
 function Node(bucket, parent, key_in_parent, value) {
 	//represents the in memory deserialised version of a page
 	this.bucket = bucket;
+	this.magic = LEAF_MAGIC;
 	this.key = key_in_parent; // key in parent
 	this.parent = parent; //parent node
 	this.children = []; //we append any children we materialise here
+	this.inodes = []; //Not parallel arrays as we will need to do inserts
 	this.isLeaf = true;
 	//parallel arrays for inodes
 	this.unbalanced = false;
-	this.dirty = false; //bolt doesn't need this because it caches pages not nodes
+	this.spilled = false;
 
-	if (value)
+	if (value) //is a buffer view
 		this.read(value);
 }
+Node.prototype.root = function() {
+	var n = this;
+	while (n.parent) n = n.parent;
+	return n;
+};
 Node.prototype.rebalance = function() {
 	if (!this.unbalanced) return;
-	//TODO: actually rebalance with neighbour if doable.
+	//TODO: combine with next if instanciated and both small enough
+	// we want to do this because both are being written anyway.
 };
-Node.prototype.write = function(buffer) {
-	// TODO: write onto the buffer
+Node.prototype.write = function(data) {
+	// data must be a Uint8Array of sufficient size
+	if (!data) {
+		//if we didn't get somewhere to write to then make a new buffer
+		// of the required size.
+		data = new Uint8Array(this.size());
+	}
+	var dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
+	var count = this.inodes.length;
+	var inodes = this.inodes;
+	dv.setUint32(0, this.magic);
+	dv.setUint32(4, count);
+	var j = NODE_HEADER_SIZE;
+	var pos = NODE_HEADER_SIZE + NODE_ELEMENT_SIZE * count; //pos after..
+	for (var i = 0; i < count; i++) {
+		var inode = inodes[i];
+		dv.setUint32(j, pos);
+		dv.setUint32(j+4, inode.key.byteLength);
+		dv.setUint32(j+8, inode.value.byteLength);
+		data.set(inode.key, pos);
+		pos += inode.key.byteLength;
+		data.set(inode.value, pos);
+		pos += inode.value.byteLength;
+		j += 12; //NODE_ELEMENT_SIZE
+	}
+	return data;
+};
+Node.prototype.read = function(value) {
+	//value must be a Uint8Array
+	var dv = new DataView(value.buffer, value.byteOffset, value.byteLength);
+	var buffer = value.buffer;
+	var byteOffset = value.byteOffset;
+	var count, type;
+	var inodes = [];
+	type = dv.getUint8(0);
+	this.magic = dv.getUint32(0);
+	count = dv.getUint32(4);
+	this.isLeaf = (type === LEAF_TYPE);
+	var j = NODE_HEADER_SIZE;
+	for (var i = 0; i < count; i++) {
+		var pos = dv.getUint32(j) + byteOffset;
+		var ksize = dv.getUint32(j+4);
+		var vsize = dv.getUint32(j+8);
+		inodes.push({
+			key: new Uint8Array(buffer, pos, ksize),
+			value: new Uint8Array(buffer, pos + ksize, vsize)
+		});
+		j += 12;
+	}
+	this.inodes = inodes;
 };
 Node.prototype.spillChildren = function(callback) {
-	// body...
+	var self = this;
+	each(this.children,function (child, next) {
+		//TODO:
+	}, callback);
 };
 Node.prototype.spill = function(callback) {
 	if (!this.dirty) return callback(null, null);
-
+	//TODO:
 };
 Node.prototype.minKeys = function() {
 	if (this.isLeaf) return 1;
 	return MINIMUM_BRANCHING_FACTOR;
 };
-Node.prototype.read = function(value) {  //value is a page
-	//make it look like uint32 to get count
-	// read
-	this.isLeaf = value[0] == LEAF_TYPE;
-
-};
-Node.prototype.put = function(key, value) { //NOTE: the reason for the new and old key is if we have changed the first key in a leaf and need to change the key in the branch node.
-	//TODO: insert or replace value
-	this.dirty = true;
+Node.prototype.put = function(oldkey, key, value) {
+	// oldkey, (new)key, and value must all be Uint8Arrays
+	var inodes = this.inodes;
+	//find insertion point
+	var index = search(inodes.length, function(i) { return (oldkey >= inodes[i].key); });
+	var exact = (inodes.length > 0 && index < inodes.length && bytesEqual(inodes[index].key, oldkey));
+	if (!exact) {
+		//insert a new node.
+		this.inodes.splice(index, 0, {key:key, value:value});
+	} else {
+		//update an existing node.
+		var inode = inodes[index];
+		inode.key = key;
+		inode.value = value;
+	}
 };
 Node.prototype.delete = function(key) {
-	// TODO
+	var inodes = this.inodes;
+	var index = search(inodes.length, function(i) { return (oldkey >= inodes[i].key); });
+	if (index >= inodes.length || !bytesEqual(inodes[i].key, key))
+		return; //could not find element
+	this.inodes.splice(index,1);
 	this.unbalanced = true;
-	this.dirty = true;
 };
 Node.prototype.childAt = function(index, callback) {
-	// body...
+	// Return child node at index
 };
-
 Node.prototype.size = function() {
 	var size = NODE_HEADER_SIZE;
-	//for (var i = this.keys.length - 1; i >= 0; i--) {
-	//	size += NODE_ELEMENT_SIZE + this.keys[i].byteLength;
-	//	//TODO: we need to actually store the inodes and use them
-	//	// this is not going to work as is.
-	//}
+	for (var i = this.inodes.length - 1; i >= 0; i--) {
+		var inode = this.inodes[i];
+		size += NODE_ELEMENT_SIZE + inode.key.byteLength + inode.value.byteLength;
+	}
+	return size;
 };
 
 
@@ -374,7 +561,7 @@ Bucket.prototype.Put = function(key, value, callback) {
 	c.Seek(key, function(k, v) {
 		c.node(function(err, node) {
 			if (err) return callback(err);
-			node.put(key, value);
+			node.put(key, key, value);
 			callback(null);
 		});
 	});
@@ -411,30 +598,29 @@ Bucket.prototype.rebalance = function() {
 	for (var k in buckets) buckets[k].b.rebalance();
 };
 Bucket.prototype.spill = function(max_inline, callback) {
+	var self = this;
 	each(this.buckets,function (bucket, done) {
 		//spill all registered child buckets
 		bucket.b.spill(max_inline, function(err, value) {
 			if (err) return done(err);
-
+			if (value == null) return done(null);
+			self.Put(bucket.k, value, done); //save the key or inline back to node
 		});
 	}, function(err) {
 		if (err) return callback(err);
-		if (this.rootNode.dirty) {
-			// spillChildren
-			// write bucket header
-			// write node
-			// if buffer.byteLength > max_inline we put and return key
-			// otherwise we return buffer as value
+		if (self.rootNode.dirty) {
+			self.rootNode.spill(function(err) {
+				if (err) return callback(err);
+				self.rootNode = self.rootNode.root();
+				//check size (if > max_inline then we write to page)
+				// and 
+				// otherwise return as a value.
+			})
 		}
 	})
-
 };
 
 Bucket.prototype.Commit = function(callback) {
-	// TODO: Persist the root node
-	//   after persiting all the root nodes dirty list
-	//   etc.
-
 	this.rebalance(); //can be done syncronously
 	this.spill(4000, callback);
 };
@@ -760,6 +946,9 @@ window.DummyBlockStore = DummyBlockStore;
 window.BTree = BTree;
 window.StructStore = StructStore;
 window.SimpleMarshaller = SimpleMarshaller;
+window.Node = Node;
+window.Cursor = Cursor;
+window.Bucket = Bucket;
 
 
 //What should be responsible for getting blocks here?
