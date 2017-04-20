@@ -323,6 +323,8 @@ function putUTF8CharCode(aTarget, nChar, nPutAt) {
 };
 
 //TODO: this is very similar to new TextEncoder().encode()
+// could use that if we don't mind out string starting with
+// a character that is also the string type indicator
 function stoa(str, array, offset) {
 	//convert a DOMstring to a Uint8Array
 	//TODO: want to put our string type specifier
@@ -371,45 +373,81 @@ element {
 function Node(bucket, parent, key_in_parent, value) {
 	//represents the in memory deserialised version of a page
 	this.bucket = bucket;
-	this.magic = LEAF_MAGIC;
 	this.key = key_in_parent; // key in parent
-	this.parent = parent; //parent node
-	this.children = []; //we append any children we materialise here
-	this.inodes = []; //Not parallel arrays as we will need to do inserts
+	this.parent = parent || null; //parent node
+	//this.children = []; //we append any children we materialise here
+	this.inodes = []; //Not parallel arrays as they would be slower to insert and split
 	this.isLeaf = true;
+	this.byteLength = 65; //default byteLength in parent TODO: replace with keylength estimate
 	//parallel arrays for inodes
+	this.dirty = false;
 	this.unbalanced = false;
-	this.spilled = false;
 
 	if (value) //is a buffer view
 		this.read(value);
 }
+Node.prototype.isBlockAware = true;
 Node.prototype.root = function() {
 	var n = this;
 	while (n.parent) n = n.parent;
 	return n;
 };
-Node.prototype.rebalance = function() {
-	if (!this.unbalanced) return;
-	//TODO: combine with next if instanciated and both small enough
-	// we want to do this because both are being written anyway.
+Node.prototype.rebalance = function(pageSize, fillPercentage) {
+	if (!this.unbalanced) return this;
+	var prev = null;
+	var len = this.inodes.length;
+	for (var i = 0; i < this.inodes.length; i++) {
+		var inode = this.inodes[i];
+		if (inode.value.isBlockAware) {
+			inode.value.rebalance(pageSize, prev);
+		} else {
+			prev = null;
+		}
+	}
+	this.unbalanced = false;
+
+	var threshold = pageSize / 4;
+	//if filled enough and have more than the minimum number of keys then
+	//check is we need to split
+	if (!this.sizeLessThan(threshold) && this.inodes.length >= this.minKeys())
+		return this.split(pageSize);
+
+	if (this.parent == null) {
+		//root node needs special handling
+		if (!this.isLeaf && this.inodes.length == 1 && this.inodes[0].value.isBlockAware) {
+			//we have an instantiated single child node
+			var child = this.inodes[0].value;
+			child.parent = null;
+			return child;
+		}
+		return this;
+	}
+
+	//TODO: this needs to have merging of small nodes in some way.
+	// we may want to inline in the branch nodes any very small leaf nodes
+	//  ... but they would have to be very small.
+	return this;
 };
-Node.prototype.write = function(data) {
+Node.prototype.write = function(data, offset) {
+	//TODO: this probably doesn't need an offset parameter (although it might save an alloc)
+	offset = offset || 0;
 	// data must be a Uint8Array of sufficient size
 	if (!data) {
 		//if we didn't get somewhere to write to then make a new buffer
 		// of the required size.
-		data = new Uint8Array(this.size());
+		data = new Uint8Array(this.size() + offset);
 	}
-	var dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
+	var dv = new DataView(data.buffer, data.byteOffset + offset, data.byteLength);
 	var count = this.inodes.length;
 	var inodes = this.inodes;
-	dv.setUint32(0, this.magic);
+	dv.setUint32(0, this.isLeaf ? LEAF_MAGIC : BRANCH_MAGIC);
 	dv.setUint32(4, count);
 	var j = NODE_HEADER_SIZE;
-	var pos = NODE_HEADER_SIZE + NODE_ELEMENT_SIZE * count; //pos after..
+	var pos = offset + NODE_HEADER_SIZE + NODE_ELEMENT_SIZE * count; //pos after..
 	for (var i = 0; i < count; i++) {
 		var inode = inodes[i];
+		//TODO: check to make sure that we have a Uint8Array in inode.value
+		//  and if not it should support write
 		dv.setUint32(j, pos);
 		dv.setUint32(j+4, inode.key.byteLength);
 		dv.setUint32(j+8, inode.value.byteLength);
@@ -428,10 +466,9 @@ Node.prototype.read = function(value) {
 	var byteOffset = value.byteOffset;
 	var count, type;
 	var inodes = [];
-	type = dv.getUint8(0);
-	this.magic = dv.getUint32(0);
+	var magic = dv.getUint32(0);
 	count = dv.getUint32(4);
-	this.isLeaf = (type === LEAF_TYPE);
+	this.isLeaf = (type === LEAF_MAGIC);
 	var j = NODE_HEADER_SIZE;
 	for (var i = 0; i < count; i++) {
 		var pos = dv.getUint32(j) + byteOffset;
@@ -445,34 +482,120 @@ Node.prototype.read = function(value) {
 	}
 	this.inodes = inodes;
 };
+Node.prototype.splitIndex = function(threshold) {
+	var sz = NODE_HEADER_SIZE;
+	var minKeysPerPage = this.minKeys();
+	var l = this.inodes.length - minKeysPerPage;
+	for (var i = 0; i < l; i++) {
+		var inode = this.inodes[i];
+		sz += NODE_ELEMENT_SIZE + inode.key.byteLength + inode.value.byteLength;
+		if (i >= minKeysPerPage && sz > threshold)
+			break;
+	}
+	return i;
+};
+Node.prototype.splitTwo = function(pageSize, fillPercentage) {
+	//check if we are big enough to split
+	if (this.inodes.length <= this.minSplitKeys() || this.sizeLessThan(pageSize)) {
+		return null;
+	}
+	var threshold = pageSize * fillPercentage; //we may want to make this bigger 
+	var splitIndex = this.splitIndex(threshold);
+
+	//if we don't have a parent then create one
+	if (this.parent == null) {
+		this.parent = new Node(this.bucket);
+		this.parent.isLeaf = false;
+		//add ourselves to the parent
+		this.key = this.inodes[0].key;
+		this.parent.put(this.key, this.key, this);
+	}
+
+	var next = new Node(this.bucket, this.parent);
+	next.isLeaf = this.isLeaf;
+	next.inodes = this.inodes.splice(splitIndex); //TODO: is this off by 1?
+	//TODO: this is a schlemiel the painter algorithm
+	// and will be very slow if we add a large number of items to a node
+	// and then split it.
+	for (var i = next.inodes.length - 1; i >= 0; i--) {
+		var inode = next.inodes[i];
+		if (inode.value.isBlockAware)
+			inode.value.parent = next;
+	}
+	return next;
+};
+Node.prototype.split = function(pageSize, fillPercentage) {
+	fillPercentage = fillPercentage || 0.5;
+	var wasRoot = !(this.parent); //do we need to split our parent?
+
+	var node = this;
+	while (true) {
+		var b = node.splitTwo(pageSize, fillPercentage);
+		if (b === null) break;
+		node = b;
+		var key = node.key;
+		if (key === null) {
+			key = node.inodes[0].key;
+		}
+		node.parent.put(key, node.inodes[0].key, node);
+		node.key = node.inodes[0].key;
+	}
+
+	if (wasRoot && this.parent)
+		return this.parent.split(pageSize);
+	return this;
+
+};
 Node.prototype.spillChildren = function(callback) {
 	var self = this;
-	each(this.children,function (child, next) {
+	//spill all the block aware stuff.
+	//eachA(this.children,function (child, next) {
 		//TODO:
-	}, callback);
+	//}, callback);
 };
+//spill = write out the store
 Node.prototype.spill = function(callback) {
 	if (!this.dirty) return callback(null, null);
 	//TODO:
+	//NOTE: we need to do all the splitting of
+	//  children syncronously so that we can
+	//  be sure to spill all the new nodes created
+};
+Node.prototype.minSplitKeys = function() {
+	if (this.isLeaf) return 1;
+	return MINIMUM_BRANCHING_FACTOR * 2;
 };
 Node.prototype.minKeys = function() {
 	if (this.isLeaf) return 1;
 	return MINIMUM_BRANCHING_FACTOR;
 };
 Node.prototype.put = function(oldkey, key, value) {
-	// oldkey, (new)key, and value must all be Uint8Arrays
+	// oldkey, (new)key, and value must all be Uint8Arrays(ish)
+	// value can be a Node or another object that supports write()
+	//    and byteLength (which needs to be reasonable.)
+	// assert( oldkey == (new)key if leaf node )
 	var inodes = this.inodes;
 	//find insertion point
 	var index = search(inodes.length, function(i) { return (oldkey >= inodes[i].key); });
-	var exact = (inodes.length > 0 && index < inodes.length && bytesEqual(inodes[index].key, oldkey));
-	if (!exact) {
-		//insert a new node.
+	// TODO: append optimisation
+	// if (index >= inodes.length) { inodes.push({key:key, value:value}) } else
+	if (!(inodes.length > 0 &&
+		index < inodes.length &&
+		bytesEqual(inodes[index].key, oldkey))) {
+		//insert a new inode.
+
 		this.inodes.splice(index, 0, {key:key, value:value});
 	} else {
-		//update an existing node.
+		//update an existing inode.
 		var inode = inodes[index];
 		inode.key = key;
 		inode.value = value;
+	}
+	var node = this;
+	while (node && (!node.dirty || !node.unbalanced)) {
+		node.dirty = true;
+		node.unbalanced = true;
+		node = node.parent;
 	}
 };
 Node.prototype.delete = function(key) {
@@ -481,7 +604,12 @@ Node.prototype.delete = function(key) {
 	if (index >= inodes.length || !bytesEqual(inodes[i].key, key))
 		return; //could not find element
 	this.inodes.splice(index,1);
-	this.unbalanced = true;
+	var node = this;
+	while (node && (!node.dirty || !node.unbalanced)) {
+		node.dirty = true;
+		node.unbalanced = true;
+		node = node.parent;
+	}
 };
 Node.prototype.childAt = function(index, callback) {
 	// Return child node at index
@@ -493,6 +621,16 @@ Node.prototype.size = function() {
 		size += NODE_ELEMENT_SIZE + inode.key.byteLength + inode.value.byteLength;
 	}
 	return size;
+};
+Node.prototype.sizeLessThan = function(v) {
+	var size = NODE_HEADER_SIZE;
+	for (var i = this.inodes.length - 1; i >= 0; i--) {
+		var inode = this.inodes[i];
+		size += NODE_ELEMENT_SIZE + inode.key.byteLength + inode.value.byteLength;
+		if (size >= v)
+			return false;
+	}
+	return true;
 };
 
 
@@ -524,14 +662,32 @@ function each(obj, iterator, callback) {
 /* end Async */
 
 
-function Bucket(store) {
+nextTick = (function(window, prefixes, i, p, fnc) {
+    while (!fnc && i < prefixes.length) {
+        fnc = window[prefixes[i++] + 'equestAnimationFrame'];
+    }
+    return (fnc && fnc.bind(window)) || window.setImmediate || function(fnc) {window.setTimeout(fnc, 0);};
+})(window, 'r webkitR mozR msR oR'.split(' '), 0);
+
+
+
+function Bucket(store, value, parent, key) {
 	this.store = store;
 	this.sequence = 0
-	this.rootNode = null; //TODO: we should always be able to set this
+	this.rootNode;
+	this.pageSize = 4096;
+	this.fillPercentage = 0.5; //
+	this.parent = parent; //our parent node.
+	this.key = key; //our key in our parent node.
+	this.byteLength = 
 
-	this.nodes = {}; //cache of open nodes
-	this.buckets = {}; //cache of open buckets
+	if (value) {
+		this.read(value);
+	} else {
+		this.rootNode = new Node(this)
+	}
 }
+Bucket.prototype.isBlockAware = true;
 Bucket.prototype.node = function(page_key, parent, callback) {
 	//called from Cursor node
 
@@ -556,7 +712,7 @@ Bucket.prototype.SetSequence = function(value) {
 };
 Bucket.prototype.Put = function(key, value, callback) {
 	// key: Uint8Array
-	// value: Uint8Array -- byte array
+	// value: Uint8Array -- byte array (or a blockAware object)
 	var c = this.Cursor();
 	c.Seek(key, function(k, v) {
 		c.node(function(err, node) {
@@ -585,44 +741,26 @@ Bucket.prototype.Delete = function(key, callback) {
 		});
 	});
 };
-Bucket.prototype.RegisterBucket = function(key, sub_bucket) {
-	this.buckets[key] = {k:key, b:sub_bucket}; //if we have opened or created something that is bucket like
-};
 Bucket.prototype.Cursor = function() {
 	return new Cursor(this);
 };
 Bucket.prototype.rebalance = function() {
-	var nodes = this.nodes;
-	var buckets = this.buckets;
-	for (var k in nodes) nodes[k].rebalance(); //only does something for deletes
-	for (var k in buckets) buckets[k].b.rebalance();
+	this.rootNode.rebalance(this.pageSize, this.fillPercentage);
+	var size = BUCKET_HEADER_SIZE + this.rootNode.size();
+	if (this.parent && size < (this.parent.bucket.pageSize / 4)) {
+		//inlineable.
+		this.byteLength = size;
+	} else {
+		this.byteLength = 65; //estimated key size
+	}
 };
 Bucket.prototype.spill = function(max_inline, callback) {
-	var self = this;
-	each(this.buckets,function (bucket, done) {
-		//spill all registered child buckets
-		bucket.b.spill(max_inline, function(err, value) {
-			if (err) return done(err);
-			if (value == null) return done(null);
-			self.Put(bucket.k, value, done); //save the key or inline back to node
-		});
-	}, function(err) {
-		if (err) return callback(err);
-		if (self.rootNode.dirty) {
-			self.rootNode.spill(function(err) {
-				if (err) return callback(err);
-				self.rootNode = self.rootNode.root();
-				//check size (if > max_inline then we write to page)
-				// and 
-				// otherwise return as a value.
-			})
-		}
-	})
+	//TODO;
 };
 
 Bucket.prototype.Commit = function(callback) {
 	this.rebalance(); //can be done syncronously
-	this.spill(4000, callback);
+	this.spill(callback);
 };
 
 // ^^^ values and keys are both byte arrays at this point. ???
